@@ -1,0 +1,37 @@
+{
+  "name": "@dreamer/console",
+  "version": "1.0.1",
+  "license": "MIT",
+  "exports": "./src/mod.ts",
+  "publish": {
+    "include": [
+      "src/mod.ts",
+      "src/ansi.ts",
+      "src/output.ts",
+      "src/command.ts",
+      "src/prompt.ts",
+      "src/table.ts",
+      "LICENSE.md",
+      "README.md"
+    ],
+    "exclude": [
+      "**/*.test.ts",
+      "**/*.spec.ts",
+      "**/test/**",
+      "**/tests/**"
+    ]
+  },
+  "lint": {
+    "include": [
+      "src/"
+    ],
+    "rules": {
+      "tags": [
+        "recommended"
+      ],
+      "exclude": [
+        "no-explicit-any"
+      ]
+    }
+  }
+}
