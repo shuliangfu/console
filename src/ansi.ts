@@ -3,6 +3,14 @@
  * 提供终端颜色、样式和格式化功能
  */
 
+import {
+  getEnv,
+  IS_BUN,
+  IS_DENO,
+  isStderrTerminal,
+  isTerminal,
+} from "@dreamer/runtime-adapter";
+
 /**
  * 检查是否应该使用颜色输出
  * 在以下情况下禁用颜色：
@@ -18,18 +26,18 @@
  */
 export function shouldUseColor(): boolean {
   // 1. 检查 DWEB_NO_COLOR 环境变量（框架特定变量，优先级最高）
-  const dwebNoColor = Deno.env.get("DWEB_NO_COLOR");
+  const dwebNoColor = getEnv("DWEB_NO_COLOR");
   if (dwebNoColor) {
     return false;
   }
 
   // 2. 检查 NO_COLOR 环境变量（标准环境变量，用于禁用颜色）
-  if (Deno.env.get("NO_COLOR")) {
+  if (getEnv("NO_COLOR")) {
     return false;
   }
 
   // 3. 检查 TERM 环境变量
-  const term = Deno.env.get("TERM");
+  const term = getEnv("TERM");
   if (term === "dumb") {
     return false;
   }
@@ -40,15 +48,38 @@ export function shouldUseColor(): boolean {
   try {
     // 方式1: 检查 .dockerenv 文件（Docker 容器的标志文件）
     try {
-      Deno.statSync("/.dockerenv");
-      return false;
+      if (IS_DENO) {
+        (globalThis as any).Deno.statSync("/.dockerenv");
+        return false;
+      }
+      if (IS_BUN) {
+        const fs = (globalThis as any).require?.("fs");
+        if (fs) {
+          fs.statSync("/.dockerenv");
+          return false;
+        }
+      }
     } catch {
       // 文件不存在，继续检查
     }
 
     // 方式2: 检查 /proc/1/cgroup 是否包含 docker 或 containerd
     try {
-      const cgroupContent = Deno.readTextFileSync("/proc/1/cgroup");
+      let cgroupContent: string;
+      if (IS_DENO) {
+        cgroupContent = (globalThis as any).Deno.readTextFileSync(
+          "/proc/1/cgroup",
+        );
+      } else if (IS_BUN) {
+        const fs = (globalThis as any).require?.("fs");
+        if (fs) {
+          cgroupContent = fs.readFileSync("/proc/1/cgroup", "utf-8");
+        } else {
+          throw new Error("fs not available");
+        }
+      } else {
+        throw new Error("Unsupported runtime");
+      }
       if (
         cgroupContent.includes("docker") ||
         cgroupContent.includes("containerd") ||
@@ -63,10 +94,10 @@ export function shouldUseColor(): boolean {
     }
 
     // 方式3: 检查环境变量（某些容器运行时会设置）
-    const containerEnv = Deno.env.get("container");
+    const containerEnv = getEnv("container");
     if (
       containerEnv === "docker" ||
-      Deno.env.get("DOCKER_CONTAINER") === "true" ||
+      getEnv("DOCKER_CONTAINER") === "true" ||
       containerEnv !== undefined // 如果设置了 container 环境变量（通常是容器环境）
     ) {
       return false;
@@ -74,7 +105,21 @@ export function shouldUseColor(): boolean {
 
     // 方式4: 检查 /proc/self/mountinfo 是否包含 docker
     try {
-      const mountInfo = Deno.readTextFileSync("/proc/self/mountinfo");
+      let mountInfo: string;
+      if (IS_DENO) {
+        mountInfo = (globalThis as any).Deno.readTextFileSync(
+          "/proc/self/mountinfo",
+        );
+      } else if (IS_BUN) {
+        const fs = (globalThis as any).require?.("fs");
+        if (fs) {
+          mountInfo = fs.readFileSync("/proc/self/mountinfo", "utf-8");
+        } else {
+          throw new Error("fs not available");
+        }
+      } else {
+        throw new Error("Unsupported runtime");
+      }
       if (
         mountInfo.includes("docker") ||
         mountInfo.includes("containerd") ||
@@ -93,8 +138,8 @@ export function shouldUseColor(): boolean {
   // 5. 检查 stdout 和 stderr 是否都是 TTY
   // 如果其中任何一个不是 TTY，通常意味着是守护进程或输出被重定向，应该禁用颜色
   try {
-    const stdoutIsTTY = Deno.stdout.isTerminal();
-    const stderrIsTTY = Deno.stderr.isTerminal();
+    const stdoutIsTTY = isTerminal();
+    const stderrIsTTY = isStderrTerminal();
 
     // 只有当 stdout 和 stderr 都是 TTY 时才使用颜色
     // 这样可以检测到使用 tee 等工具重定向输出的情况
@@ -171,12 +216,14 @@ export function colorize(
   return `${boldCode}${colorCode}${text}${colors.reset}`;
 }
 
+import { writeStdoutSync } from "./runtime-utils.ts";
+
 /**
  * 清除屏幕
  */
 export function clearScreen(): void {
   const encoder = new TextEncoder();
-  Deno.stdout.writeSync(encoder.encode("\x1b[2J\x1b[H"));
+  writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
 }
 
 /**
@@ -184,7 +231,7 @@ export function clearScreen(): void {
  */
 export function hideCursor(): void {
   const encoder = new TextEncoder();
-  Deno.stdout.writeSync(encoder.encode("\x1b[?25l"));
+  writeStdoutSync(encoder.encode("\x1b[?25l"));
 }
 
 /**
@@ -192,7 +239,7 @@ export function hideCursor(): void {
  */
 export function showCursor(): void {
   const encoder = new TextEncoder();
-  Deno.stdout.writeSync(encoder.encode("\x1b[?25h"));
+  writeStdoutSync(encoder.encode("\x1b[?25h"));
 }
 
 /**
@@ -202,7 +249,7 @@ export function showCursor(): void {
  */
 export function moveCursor(row: number, col: number): void {
   const encoder = new TextEncoder();
-  Deno.stdout.writeSync(encoder.encode(`\x1b[${row};${col}H`));
+  writeStdoutSync(encoder.encode(`\x1b[${row};${col}H`));
 }
 
 /**
@@ -210,5 +257,5 @@ export function moveCursor(row: number, col: number): void {
  */
 export function clearLine(): void {
   const encoder = new TextEncoder();
-  Deno.stdout.writeSync(encoder.encode("\r\x1b[K"));
+  writeStdoutSync(encoder.encode("\r\x1b[K"));
 }

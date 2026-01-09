@@ -5,6 +5,12 @@
 
 import { colors } from "./ansi.ts";
 import { error } from "./output.ts";
+import {
+  exit,
+  readStdin,
+  setStdinRaw,
+  writeStdoutSync,
+} from "./runtime-utils.ts";
 
 /**
  * 读取一行输入
@@ -13,7 +19,7 @@ import { error } from "./output.ts";
 async function readLine(): Promise<string | null> {
   const decoder = new TextDecoder();
   const buf = new Uint8Array(1024);
-  const n = await Deno.stdin.read(buf);
+  const n = await readStdin(buf);
   if (n === null) {
     return null;
   }
@@ -37,7 +43,7 @@ export async function prompt(
   const formattedMessage =
     `${colors.cyan}${colors.bright}❯${colors.reset} ${colors.dim}${message}${colors.reset}`;
 
-  Deno.stdout.writeSync(encoder.encode(formattedMessage));
+  writeStdoutSync(encoder.encode(formattedMessage));
 
   if (hidden) {
     // 密码输入模式：显示 * 号
@@ -61,14 +67,13 @@ async function readLineHidden(): Promise<string | null> {
 
   try {
     // 尝试启用原始模式
-    if (Deno.stdin.setRaw) {
-      Deno.stdin.setRaw(true, { cbreak: true });
+    if (setStdinRaw(true, { cbreak: true })) {
       isRaw = true;
     }
 
     while (true) {
       const buf = new Uint8Array(10);
-      const n = await Deno.stdin.read(buf);
+      const n = await readStdin(buf);
 
       if (n === null || n === 0) {
         continue;
@@ -84,8 +89,8 @@ async function readLineHidden(): Promise<string | null> {
 
       // Ctrl+C
       if (char === 0x03) {
-        Deno.stdout.writeSync(encoder.encode("\n"));
-        Deno.exit(0);
+        writeStdoutSync(encoder.encode("\n"));
+        exit(0);
       }
 
       // 退格键或 Delete 键
@@ -93,7 +98,7 @@ async function readLineHidden(): Promise<string | null> {
         if (input.length > 0) {
           input = input.slice(0, -1);
           // 回退光标并清除字符
-          Deno.stdout.writeSync(encoder.encode("\b \b"));
+          writeStdoutSync(encoder.encode("\b \b"));
         }
         continue;
       }
@@ -102,25 +107,25 @@ async function readLineHidden(): Promise<string | null> {
       if (char >= 32 && char <= 126) {
         input += decoder.decode(bytes.subarray(0, 1));
         // 显示 * 号
-        Deno.stdout.writeSync(encoder.encode("*"));
+        writeStdoutSync(encoder.encode("*"));
       }
     }
 
     // 换行
-    Deno.stdout.writeSync(encoder.encode("\n"));
+    writeStdoutSync(encoder.encode("\n"));
 
     return input || null;
   } catch (_err) {
     // 如果原始模式失败，回退到普通输入
-    if (isRaw && Deno.stdin.setRaw) {
-      Deno.stdin.setRaw(false);
+    if (isRaw) {
+      setStdinRaw(false);
     }
     // 回退到普通输入（不隐藏）
     return await readLine();
   } finally {
     // 恢复终端
-    if (isRaw && Deno.stdin.setRaw) {
-      Deno.stdin.setRaw(false);
+    if (isRaw) {
+      setStdinRaw(false);
     }
   }
 }
@@ -455,7 +460,7 @@ export async function interactiveMenu(
   // 显示菜单
   const renderMenu = () => {
     // 移动光标到行首并清除当前行
-    Deno.stdout.writeSync(encoder.encode("\r\x1b[K"));
+    writeStdoutSync(encoder.encode("\r\x1b[K"));
 
     // 显示标题
     console.log(`${colors.cyan}${colors.bright}${message}${colors.reset}\n`);
@@ -481,21 +486,16 @@ export async function interactiveMenu(
   // 尝试使用原始模式
   try {
     // 隐藏光标
-    Deno.stdout.writeSync(encoder.encode("\x1b[?25l"));
+    writeStdoutSync(encoder.encode("\x1b[?25l"));
 
     // 启用原始模式
-    const stdin = Deno.stdin;
-    const isRaw = Deno.stdin.setRaw !== undefined;
-
-    if (isRaw) {
-      Deno.stdin.setRaw(true, { cbreak: true });
-    }
+    const isRaw = setStdinRaw(true, { cbreak: true });
 
     renderMenu();
 
     while (true) {
       const buf = new Uint8Array(10);
-      const n = await stdin.read(buf);
+      const n = await readStdin(buf);
 
       if (n === null || n === 0) {
         continue;
@@ -514,7 +514,7 @@ export async function interactiveMenu(
             ? selectedIndex - 1
             : options.length - 1;
           // 清除屏幕并重新渲染
-          Deno.stdout.writeSync(encoder.encode("\x1b[2J\x1b[H"));
+          writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
           renderMenu();
         } else if (bytes[2] === 0x42) {
           // 下箭头
@@ -522,7 +522,7 @@ export async function interactiveMenu(
             ? selectedIndex + 1
             : 0;
           // 清除屏幕并重新渲染
-          Deno.stdout.writeSync(encoder.encode("\x1b[2J\x1b[H"));
+          writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
           renderMenu();
         }
       } else if (
@@ -534,22 +534,22 @@ export async function interactiveMenu(
       } else if (input === "\x1b" || bytes[0] === 0x1b || bytes[0] === 0x03) {
         // Esc 或 Ctrl+C
         // 恢复终端
-        Deno.stdout.writeSync(encoder.encode("\x1b[?25h"));
+        writeStdoutSync(encoder.encode("\x1b[?25h"));
         if (isRaw) {
-          Deno.stdin.setRaw(false);
+          setStdinRaw(false);
         }
-        Deno.exit(0);
+        exit(0);
       }
     }
 
     // 恢复终端
-    Deno.stdout.writeSync(encoder.encode("\x1b[?25h"));
+    writeStdoutSync(encoder.encode("\x1b[?25h"));
     if (isRaw) {
-      Deno.stdin.setRaw(false);
+      setStdinRaw(false);
     }
 
     // 清屏
-    Deno.stdout.writeSync(encoder.encode("\x1b[2J\x1b[H"));
+    writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
 
     return selectedIndex;
   } catch (_err) {

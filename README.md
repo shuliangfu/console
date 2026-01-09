@@ -1,20 +1,49 @@
 # @dreamer/console
 
-一个用于 Deno 的控制台工具库，提供命令行命令封装、美化输出、表格显示和用户交互等功能。
+> 一个用于 Deno 和 Bun 的控制台工具库，提供命令行命令封装、美化输出、表格显示和用户交互等功能
 
-## 特性
+[![JSR](https://jsr.io/badges/@dreamer/console)](https://jsr.io/@dreamer/console)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-- 🎨 **美化输出**：提供成功、错误、警告、信息等美化的消息输出
-- 📋 **表格显示**：支持多种样式的表格输出，包括边框、对齐等
-- 💬 **用户交互**：提供文本输入、密码输入、选择、确认等交互功能
-- 🎯 **命令封装**：强大的命令行命令封装类，支持参数解析、选项处理、子命令等
-- 🌈 **ANSI 颜色**：完整的 ANSI 颜色和样式支持，自动检测终端能力
-- 📊 **进度条**：支持进度条显示
+---
 
-## 安装
+## 📋 目录
+
+- [特性](#-特性)
+- [安装](#-安装)
+- [环境兼容性](#-环境兼容性)
+- [快速开始](#-快速开始)
+- [API 文档](#-api-文档)
+- [贡献](#-贡献)
+- [许可证](#-许可证)
+
+---
+
+## ✨ 特性
+
+| 特性 | 说明 |
+|------|------|
+| 🎨 **美化输出** | 提供成功、错误、警告、信息等美化的消息输出 |
+| 📋 **表格显示** | 支持多种样式的表格输出，包括边框、对齐等 |
+| 💬 **用户交互** | 提供文本输入、密码输入、选择、确认等交互功能 |
+| 🎯 **命令封装** | 强大的命令行命令封装类，支持参数解析、选项处理、子命令等 |
+| 🌈 **ANSI 颜色** | 完整的 ANSI 颜色和样式支持，自动检测终端能力 |
+| 📊 **进度条** | 支持进度条显示 |
+
+---
+
+## 📦 安装
+
+### Deno
 
 ```bash
 deno add jsr:@dreamer/console
+```
+
+### Bun
+
+```bash
+bunx jsr add @dreamer/console
 ```
 
 或者直接在代码中导入：
@@ -23,14 +52,21 @@ deno add jsr:@dreamer/console
 import { Command, success, error, table, prompt } from "jsr:@dreamer/console";
 ```
 
-## 环境兼容性
+---
 
-- **Deno 版本**：要求 Deno 2.5 或更高版本
-- **服务端**：✅ 支持（Deno 运行时，需要 TTY 终端支持）
-- **客户端**：❌ 不支持（浏览器环境不支持终端交互）
-- **终端要求**：支持 ANSI 转义序列的终端（大多数现代终端都支持）
+## 🌍 环境兼容性
 
-## 使用方法
+| 环境 | 版本要求 | 状态 |
+|------|---------|------|
+| **Deno** | 2.5+ | ✅ 完全支持 |
+| **Bun** | 1.0+ | ✅ 完全支持 |
+| **服务端** | - | ✅ 支持（兼容 Deno 和 Bun 运行时，需要 TTY 终端支持） |
+| **客户端** | - | ❌ 不支持（浏览器环境不支持终端交互） |
+| **终端要求** | - | 📦 支持 ANSI 转义序列的终端（大多数现代终端都支持） |
+
+---
+
+## 🚀 快速开始
 
 ### 命令封装
 
@@ -148,7 +184,9 @@ const choice = await select("选择选项：", [
 ]);
 ```
 
-## API 文档
+---
+
+## 📚 API 文档
 
 ### Command 类
 
@@ -211,18 +249,22 @@ const choice = await select("选择选项：", [
 - `moveCursor(row, col)`: 移动光标
 - `clearLine()`: 清除当前行
 
-## 环境要求
+---
 
-- Deno 2.0+
+## 🤝 贡献
 
-## 许可证
+欢迎提交 Issue 和 Pull Request！
+
+---
+
+## 📄 许可证
 
 MIT License - 详见 [LICENSE.md](./LICENSE.md)
 
-## 版本
+---
 
-当前版本：[![JSR](https://jsr.io/badges/@dreamer/console)](https://jsr.io/@dreamer/console)
+<div align="center">
 
-## 贡献
+**Made with ❤️ by Dreamer Team**
 
-欢迎提交 Issue 和 Pull Request！
+</div>
