@@ -4,10 +4,10 @@
  * @fileoverview 命令行帮助信息生成器
  */
 
-import { cwd, IS_BUN, IS_DENO } from "@dreamer/runtime-adapter";
-import { colors } from "./ansi.ts";
-import { exit } from "./runtime-utils.ts";
-import type { CommandArgument, CommandOption } from "./types.ts";
+import { cwd, IS_BUN, IS_DENO } from "@dreamer/runtime-adapter"
+import { colors } from "./ansi.ts"
+import { exit } from "./runtime-utils.ts"
+import type { CommandArgument, CommandOption } from "./types.ts"
 
 /**
  * 帮助信息生成器类
@@ -442,30 +442,29 @@ export class CommandHelpGenerator {
           // 如果获取失败，使用默认值
         }
 
-        // 构建完整的命令路径（包含父命令名称）
-        // 例如：如果当前命令是 "db"，子命令是 "create-user"，则生成 "deno run -A console/cli.ts db create-user --help" 或 "bun run console/cli.ts db create-user --help"
-        let commandPrefix =
-          `${scriptPath} ${config.name} ${firstSubcommand} --help`;
+        // 构建完整的命令路径（不包含主命令名称）
+        // 例如：如果子命令是 "build"，则生成 "deno run -A src/cli.ts build --help" 或 "bun run src/cli.ts build --help"
+        let commandPrefix = `${scriptPath} ${firstSubcommand} --help`;
         if (config.usage) {
           // 从 usage 中提取命令前缀，替换 <command> 为实际子命令，替换 [选项] 为 --help
           const firstLine = config.usage.split("\n")[0].trim();
           // 如果 usage 中已经包含运行时命令，则直接使用；否则添加脚本路径
           if (firstLine.includes("deno run") || firstLine.includes("bun run")) {
             commandPrefix = firstLine
-              .replace(/<command>/g, `${config.name} ${firstSubcommand}`)
+              .replace(/<command>/g, firstSubcommand)
               .replace(/\[选项\]/g, "--help");
           } else {
             commandPrefix = `${scriptPath} ${firstLine}`
-              .replace(/<command>/g, `${config.name} ${firstSubcommand}`)
+              .replace(/<command>/g, firstSubcommand)
               .replace(/\[选项\]/g, "--help");
           }
         }
         console.log(
-          `${colors.dim}提示: 查看子命令详细帮助，例如: ${colors.reset}${colors.cyan}${commandPrefix}${colors.reset}${colors.dim}${colors.reset}\n`,
+          `${colors.dim}提示: 查看子命令详细帮助，例如: ${colors.reset}${colors.cyan}${commandPrefix}${colors.reset}\n`,
         );
       } else {
         console.log(
-          `${colors.dim}提示: 使用 ${colors.reset}${colors.cyan}${config.name} <command> --help${colors.reset}${colors.dim} 查看子命令的详细选项${colors.reset}\n`,
+          `${colors.dim}提示: 使用 ${colors.reset}${colors.cyan}<command> --help${colors.reset}${colors.dim} 查看子命令的详细选项${colors.reset}\n`,
         );
       }
     }

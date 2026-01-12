@@ -361,14 +361,18 @@ const confirmed = await confirm("确定要继续吗？");
 const confirmedWithDefault = await confirm("确定要继续吗？", true); // 默认值
 
 // 单选
-const choice = await select("选择选项：", [
-  { value: "1", label: "选项 1" },
-  { value: "2", label: "选项 2" },
-  { value: "3", label: "选项 3" },
-]);
+// select 函数返回选中的选项索引（从 0 开始）
+const options = ["选项 1", "选项 2", "选项 3"];
+const optionValues = ["1", "2", "3"];
+const choiceIndex = await select("选择选项：", options);
+const choice = optionValues[choiceIndex]; // 获取对应的值
 
 // 多选
-const choices = await multiSelect("选择多个选项：", [
+// multiSelect 函数返回选中的选项索引数组（从 0 开始）
+const multiOptions = ["选项 A", "选项 B", "选项 C"];
+const multiOptionValues = ["a", "b", "c"];
+const choiceIndices = await multiSelect("选择多个选项：", multiOptions);
+const selectedValues = choiceIndices.map((idx) => multiOptionValues[idx]); // 获取对应的值数组
   { value: "1", label: "选项 1" },
   { value: "2", label: "选项 2" },
   { value: "3", label: "选项 3" },
