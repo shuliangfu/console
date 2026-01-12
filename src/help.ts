@@ -4,6 +4,7 @@
  * @fileoverview 命令行帮助信息生成器
  */
 
+import { cwd, IS_BUN, IS_DENO } from "@dreamer/runtime-adapter";
 import { colors } from "./ansi.ts";
 import { exit } from "./runtime-utils.ts";
 import type { CommandArgument, CommandOption } from "./types.ts";
@@ -396,9 +397,33 @@ export class CommandHelpGenerator {
       const firstSubcommand = config.subcommands.keys().next().value;
       if (firstSubcommand) {
         // 尝试获取当前脚本路径
-        let scriptPath = "deno run -A <script>";
+        // 根据运行时环境选择命令前缀
+        const runtimeCommand = IS_BUN ? "bun run" : "deno run -A";
+        let scriptPath = `${runtimeCommand} <script>`;
         try {
-          const mainModule = Deno.mainModule;
+          let mainModule: string | undefined;
+
+          // 获取主模块路径（兼容 Deno 和 Bun）
+          if (IS_DENO) {
+            mainModule = (globalThis as any).Deno.mainModule;
+          } else if (IS_BUN) {
+            // Bun 中通过 process.argv[1] 获取主模块路径
+            const process = (globalThis as any).process;
+            if (process && process.argv && process.argv.length > 1) {
+              const mainFile = process.argv[1];
+              // 转换为 file:// URL 格式以保持一致性
+              if (mainFile.startsWith("file://")) {
+                mainModule = mainFile;
+              } else {
+                // 如果是相对路径或绝对路径，转换为 file:// URL
+                const path = mainFile.startsWith("/")
+                  ? mainFile
+                  : `/${mainFile}`;
+                mainModule = `file://${path}`;
+              }
+            }
+          }
+
           if (mainModule) {
             // 从主模块路径中提取脚本路径
             // 例如：file:///path/to/console/cli.ts -> console/cli.ts
@@ -406,11 +431,11 @@ export class CommandHelpGenerator {
             if (url.protocol === "file:") {
               const path = url.pathname;
               // 获取相对于当前工作目录的路径
-              const cwd = Deno.cwd();
-              const scriptRelativePath = path.startsWith(cwd)
-                ? path.substring(cwd.length + 1)
+              const currentCwd = cwd();
+              const scriptRelativePath = path.startsWith(currentCwd)
+                ? path.substring(currentCwd.length + 1)
                 : path.substring(path.lastIndexOf("/") + 1);
-              scriptPath = `deno run -A ${scriptRelativePath}`;
+              scriptPath = `${runtimeCommand} ${scriptRelativePath}`;
             }
           }
         } catch {
@@ -418,14 +443,14 @@ export class CommandHelpGenerator {
         }
 
         // 构建完整的命令路径（包含父命令名称）
-        // 例如：如果当前命令是 "db"，子命令是 "create-user"，则生成 "deno run -A console/cli.ts db create-user --help"
+        // 例如：如果当前命令是 "db"，子命令是 "create-user"，则生成 "deno run -A console/cli.ts db create-user --help" 或 "bun run console/cli.ts db create-user --help"
         let commandPrefix =
           `${scriptPath} ${config.name} ${firstSubcommand} --help`;
         if (config.usage) {
           // 从 usage 中提取命令前缀，替换 <command> 为实际子命令，替换 [选项] 为 --help
           const firstLine = config.usage.split("\n")[0].trim();
-          // 如果 usage 中已经包含 deno run，则直接使用；否则添加脚本路径
-          if (firstLine.includes("deno run")) {
+          // 如果 usage 中已经包含运行时命令，则直接使用；否则添加脚本路径
+          if (firstLine.includes("deno run") || firstLine.includes("bun run")) {
             commandPrefix = firstLine
               .replace(/<command>/g, `${config.name} ${firstSubcommand}`)
               .replace(/\[选项\]/g, "--help");

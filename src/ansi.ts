@@ -4,11 +4,13 @@
  */
 
 import {
+  existsSync,
   getEnv,
   IS_BUN,
   IS_DENO,
   isStderrTerminal,
   isTerminal,
+  readTextFileSync,
 } from "@dreamer/runtime-adapter";
 
 /**
@@ -45,19 +47,13 @@ export function shouldUseColor(): boolean {
   // 4. 检查是否在 Docker 容器中运行
   // 多种检测方式确保能正确识别 Docker 环境
   // 注意：在 Docker 中使用 tee 时，stdout 仍然是 TTY，所以必须依赖容器检测
+  // 注意：由于 shouldUseColor() 必须是同步函数，这里使用同步 API
+  // 使用 runtime-adapter 的运行时检测常量（IS_DENO, IS_BUN）来适配不同运行时
   try {
     // 方式1: 检查 .dockerenv 文件（Docker 容器的标志文件）
     try {
-      if (IS_DENO) {
-        (globalThis as any).Deno.statSync("/.dockerenv");
+      if (existsSync("/.dockerenv")) {
         return false;
-      }
-      if (IS_BUN) {
-        const fs = (globalThis as any).require?.("fs");
-        if (fs) {
-          fs.statSync("/.dockerenv");
-          return false;
-        }
       }
     } catch {
       // 文件不存在，继续检查
@@ -65,21 +61,7 @@ export function shouldUseColor(): boolean {
 
     // 方式2: 检查 /proc/1/cgroup 是否包含 docker 或 containerd
     try {
-      let cgroupContent: string;
-      if (IS_DENO) {
-        cgroupContent = (globalThis as any).Deno.readTextFileSync(
-          "/proc/1/cgroup",
-        );
-      } else if (IS_BUN) {
-        const fs = (globalThis as any).require?.("fs");
-        if (fs) {
-          cgroupContent = fs.readFileSync("/proc/1/cgroup", "utf-8");
-        } else {
-          throw new Error("fs not available");
-        }
-      } else {
-        throw new Error("Unsupported runtime");
-      }
+      const cgroupContent = readTextFileSync("/proc/1/cgroup");
       if (
         cgroupContent.includes("docker") ||
         cgroupContent.includes("containerd") ||
@@ -94,6 +76,7 @@ export function shouldUseColor(): boolean {
     }
 
     // 方式3: 检查环境变量（某些容器运行时会设置）
+    // 使用 runtime-adapter 的 getEnv 函数
     const containerEnv = getEnv("container");
     if (
       containerEnv === "docker" ||
@@ -105,21 +88,7 @@ export function shouldUseColor(): boolean {
 
     // 方式4: 检查 /proc/self/mountinfo 是否包含 docker
     try {
-      let mountInfo: string;
-      if (IS_DENO) {
-        mountInfo = (globalThis as any).Deno.readTextFileSync(
-          "/proc/self/mountinfo",
-        );
-      } else if (IS_BUN) {
-        const fs = (globalThis as any).require?.("fs");
-        if (fs) {
-          mountInfo = fs.readFileSync("/proc/self/mountinfo", "utf-8");
-        } else {
-          throw new Error("fs not available");
-        }
-      } else {
-        throw new Error("Unsupported runtime");
-      }
+      const mountInfo = readTextFileSync("/proc/self/mountinfo");
       if (
         mountInfo.includes("docker") ||
         mountInfo.includes("containerd") ||

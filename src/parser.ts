@@ -191,14 +191,24 @@ export class CommandParser {
 
       // 处理选项（以 -- 或 - 开头）
       if (arg.startsWith("--")) {
-        const optionName = arg.slice(2);
+        // 先检查是否包含等号，如果包含则先分离选项名和值
+        let optionName: string;
+        let hasValueInArg = false;
+        if (arg.includes("=")) {
+          const [name, val] = arg.split("=", 2);
+          optionName = name.slice(2); // 移除 "--" 前缀
+          hasValueInArg = true;
+        } else {
+          optionName = arg.slice(2);
+        }
         const option = options.find((opt) => opt.name === optionName);
 
         if (option) {
           if (option.requiresValue) {
             // 需要值的选项：--option=value 或 --option value
             let value: string;
-            if (arg.includes("=")) {
+            if (hasValueInArg) {
+              // 从等号分隔的参数中提取值
               const [, val] = arg.split("=", 2);
               value = val;
             } else if (i + 1 < args.length && !args[i + 1].startsWith("-")) {
