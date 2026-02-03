@@ -5,18 +5,17 @@
  */
 
 import {
-  prompt,
+  confirm,
+  info,
   input,
   inputEmail,
   inputNumber,
   inputPassword,
   inputUsername,
-  confirm,
-  select,
   multiSelect,
   pause,
+  select,
   success,
-  info,
 } from "../src/mod.ts";
 
 async function main() {
@@ -61,8 +60,8 @@ async function main() {
   }
 
   // 单选
-  const frameworks = ["React", "Vue", "Preact"];
-  const frameworkValues = ["react", "vue", "preact"];
+  const frameworks = ["React", "Preact"];
+  const frameworkValues = ["react", "preact"];
   const choiceIndex = await select("选择你喜欢的框架:", frameworks);
 
   if (choiceIndex !== null && choiceIndex >= 0) {
