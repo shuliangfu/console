@@ -13,17 +13,29 @@ import {
 } from "./runtime-utils.ts";
 
 /**
- * 读取一行输入
+ * 读取一行输入（读到 \r 或 \n 为止，兼容不同终端的回车）
  * @returns 输入的内容
  */
 async function readLine(): Promise<string | null> {
   const decoder = new TextDecoder();
-  const buf = new Uint8Array(1024);
-  const n = await readStdin(buf);
-  if (n === null) {
-    return null;
+  const parts: number[] = [];
+  const buf = new Uint8Array(256);
+  while (true) {
+    const n = await readStdin(buf);
+    if (n === null || n === 0) {
+      if (parts.length === 0) return null;
+      break;
+    }
+    for (let i = 0; i < n; i++) {
+      const b = buf[i];
+      if (b === 0x0d || b === 0x0a) {
+        const line = decoder.decode(new Uint8Array(parts)).trim();
+        return line || null;
+      }
+      parts.push(b);
+    }
   }
-  const line = decoder.decode(buf.subarray(0, n)).trim();
+  const line = decoder.decode(new Uint8Array(parts)).trim();
   return line || null;
 }
 
