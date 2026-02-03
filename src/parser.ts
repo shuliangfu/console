@@ -195,7 +195,7 @@ export class CommandParser {
         let optionName: string;
         let hasValueInArg = false;
         if (arg.includes("=")) {
-          const [name, val] = arg.split("=", 2);
+          const [name, _val] = arg.split("=", 2);
           optionName = name.slice(2); // 移除 "--" 前缀
           hasValueInArg = true;
         } else {

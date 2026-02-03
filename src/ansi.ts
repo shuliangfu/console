@@ -6,8 +6,6 @@
 import {
   existsSync,
   getEnv,
-  IS_BUN,
-  IS_DENO,
   isStderrTerminal,
   isTerminal,
   readTextFileSync,
