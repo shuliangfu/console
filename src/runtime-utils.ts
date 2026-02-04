@@ -11,6 +11,7 @@ export { args as getArgs, exit } from "@dreamer/runtime-adapter";
 
 // 重新导出 runtime-adapter 的终端功能
 export {
+  isStdinTerminal,
   readStdin,
   setStdinRaw,
   writeStdoutSync,

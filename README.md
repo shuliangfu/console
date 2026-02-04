@@ -305,7 +305,7 @@ numberedList(["第一项", "第二项"], 0); // 自定义起始编号
 ### 表格显示
 
 ```typescript
-import { table, keyValueTable, progressBar } from "jsr:@dreamer/console";
+import { table, keyValueTable, progressBar, progressBarLive, progressBarLiveFinish } from "jsr:@dreamer/console";
 
 // 基本表格
 const data = [
@@ -339,12 +339,29 @@ keyValueTable({
 // 进度条
 progressBar(50, 100); // 50%
 progressBar(30, 100, 40, "进度"); // 自定义宽度和标签
+
+// 原地进度条（循环内同一行刷新）
+for (let i = 0; i <= 100; i++) {
+  progressBarLive(i, 100, 40, "处理中");
+  await new Promise((r) => setTimeout(r, 30));
+}
+progressBarLiveFinish();
+```
+
+### Spinner（加载指示器）
+
+```typescript
+import { startSpinner, stopSpinner, succeedSpinner, failSpinner } from "jsr:@dreamer/console";
+
+startSpinner("加载中...");
+await doSomething();
+succeedSpinner("完成"); // 或 failSpinner("失败"); 或 stopSpinner();
 ```
 
 ### 用户交互
 
 ```typescript
-import { prompt, input, inputEmail, inputNumber, inputPassword, inputUsername, confirm, select, multiSelect, pause } from "jsr:@dreamer/console";
+import { prompt, input, inputEmail, inputNumber, inputPassword, inputUsername, confirm, select, multiSelect, interactiveMenu, interactiveMultiMenu, interactiveMenuSearch, pause } from "jsr:@dreamer/console";
 
 // 文本输入
 const name = await prompt("请输入姓名：");
@@ -356,6 +373,9 @@ const age = await inputNumber("请输入年龄：");
 const password = await inputPassword("请输入密码：");
 const username = await inputUsername("请输入用户名：");
 const text = await input("请输入文本：");
+// 带默认值与超时的 input
+const nameWithDefault = await input("姓名（直接回车使用默认）：", { default: "张三" });
+const quickReply = await input("3 秒内输入：", { timeoutMs: 3000 });
 
 // 确认
 const confirmed = await confirm("确定要继续吗？");
@@ -374,10 +394,15 @@ const multiOptions = ["选项 A", "选项 B", "选项 C"];
 const multiOptionValues = ["a", "b", "c"];
 const choiceIndices = await multiSelect("选择多个选项：", multiOptions);
 const selectedValues = choiceIndices.map((idx) => multiOptionValues[idx]); // 获取对应的值数组
-  { value: "1", label: "选项 1" },
-  { value: "2", label: "选项 2" },
-  { value: "3", label: "选项 3" },
-]);
+
+// 交互式菜单（上下键选择 + Enter 确认，适合 TTY）
+const menuIndex = await interactiveMenu("选择一项：", ["选项 1", "选项 2", "选项 3"], 0);
+
+// 交互式多选（空格勾选/取消，Enter 确认）
+const multiIndices = await interactiveMultiMenu("选择多项：", ["A", "B", "C"], [], { min: 1, max: 2 });
+
+// 可搜索的交互式菜单（输入过滤后 ↑↓ 选择）
+const searchIndex = await interactiveMenuSearch("选择一项：", ["苹果", "香蕉", "橙子"], 0);
 
 // 暂停
 await pause("按 Enter 键继续...");
@@ -502,7 +527,9 @@ interface CommandArgument {
 
 - **`table(data: Record<string, any>[], columns?: TableColumn[], options?: TableOptions): void`** - 创建表格
 - **`keyValueTable(data: Record<string, any>, options?: TableOptions): void`** - 创建键值对表格
-- **`progressBar(current: number, total: number, width?: number, label?: string): void`** - 显示进度条
+- **`progressBar(current: number, total: number, width?: number, label?: string): void`** - 显示进度条（单次输出）
+- **`progressBarLive(current: number, total: number, width?: number, label?: string): void`** - 原地更新进度条（同一行刷新，适合循环内调用）
+- **`progressBarLiveFinish(): void`** - 结束原地进度条并换行（在最后一次 `progressBarLive` 后调用）
 
 #### TableColumn
 
@@ -527,16 +554,26 @@ interface TableOptions {
 
 ### 提示工具
 
-- **`prompt(message: string, hidden?: boolean): Promise<string | null>`** - 文本输入提示
-- **`input(message: string): Promise<string | null>`** - 文本输入
+- **`prompt(message: string, hidden?: boolean, options?: PromptOptions): Promise<string | null>`** - 文本输入提示。`options.default` 为空回车时的默认值，`options.timeoutMs` 为超时毫秒（超时返回 `default` 或 `null`）
+- **`input(message: string, options?: InputOptions): Promise<string | null>`** - 文本输入。`options.default`、`options.timeoutMs` 同上
 - **`inputEmail(message: string): Promise<string | null>`** - 邮箱输入（带验证）
 - **`inputNumber(message: string): Promise<number | null>`** - 数字输入（带验证）
 - **`inputPassword(message: string): Promise<string | null>`** - 密码输入（隐藏显示）
 - **`inputUsername(message: string): Promise<string | null>`** - 用户名输入（带验证）
 - **`confirm(message: string, defaultValue?: boolean): Promise<boolean>`** - 确认提示
-- **`select(message: string, choices: Array<{value: string, label: string}>, options?: SelectOptions): Promise<string | null>`** - 单选提示
-- **`multiSelect(message: string, choices: Array<{value: string, label: string}>, options?: SelectOptions): Promise<string[]>`** - 多选提示
-- **`pause(message?: string): Promise<void>`** - 暂停等待用户输入
+- **`select(message: string, options: string[], defaultValue?: number): Promise<number>`** - 单选（返回选中索引，从 0 开始）
+- **`multiSelect(message: string, options: string[], min?: number, max?: number): Promise<number[]>`** - 多选（返回选中索引数组）
+- **`interactiveMenu(message: string, options: string[], defaultValue?: number): Promise<number>`** - 交互式单选菜单（↑↓ 移动、Enter 确认，需 TTY）
+- **`interactiveMultiMenu(message: string, options: string[], initialSelected?: number[], menuOptions?: InteractiveMultiMenuOptions): Promise<number[]>`** - 交互式多选菜单（空格勾选/取消、↑↓ 移动、Enter 确认）。`menuOptions.min` / `menuOptions.max` 可限制最少/最多选择数
+- **`interactiveMenuSearch(message: string, options: string[], defaultValue?: number): Promise<number>`** - 可搜索的交互式单选菜单（输入过滤、↑↓ 选择、Enter 确认）
+- **`pause(message?: string): Promise<void>`** - 暂停等待用户按 Enter
+
+### Spinner（加载指示器）
+
+- **`startSpinner(text?: string): void`** - 启动加载动画（可选提示文案）
+- **`stopSpinner(): void`** - 停止 Spinner（不输出结果，仅清行）
+- **`succeedSpinner(text?: string): void`** - 停止并以成功样式输出文案（绿色 ✓）
+- **`failSpinner(text?: string): void`** - 停止并以失败样式输出文案（红色 ✗）
 
 ### ANSI 工具
 

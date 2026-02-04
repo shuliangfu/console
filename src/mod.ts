@@ -17,3 +17,9 @@ export * from "./prompt.ts";
 
 // 表格输出工具
 export * from "./table.ts";
+
+// 类型定义
+export * from "./types.ts";
+
+// 加载指示器（Spinner）
+export * from "./spinner.ts";

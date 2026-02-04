@@ -4,6 +4,7 @@
  */
 
 import { colors } from "./ansi.ts";
+import { writeStdoutSync } from "./runtime-utils.ts";
 
 /**
  * 表格列定义
@@ -336,4 +337,40 @@ export function progressBar(
   } else {
     console.log(`${bar} ${percentText}`);
   }
+}
+
+/**
+ * 原地更新的进度条（同一行刷新，适合循环内多次调用）
+ * 每次调用会覆盖上一帧；结束后应调用 progressBarLiveFinish() 换行，或直接输出下一行内容
+ * @param current 当前值
+ * @param total 总值
+ * @param width 进度条宽度（字符数）
+ * @param label 标签文本
+ */
+export function progressBarLive(
+  current: number,
+  total: number,
+  width = 30,
+  label = "",
+): void {
+  const percentage = Math.min(
+    100,
+    Math.max(0, total === 0 ? 0 : Math.round((current / total) * 100)),
+  );
+  const filled = Math.round((width * percentage) / 100);
+  const empty = width - filled;
+  const bar = colors.green + "█".repeat(filled) + colors.gray +
+    "░".repeat(empty) + colors.reset;
+  const percentText = `${percentage}%`;
+  const line = label ? `${label} ${bar} ${percentText}` : `${bar} ${percentText}`;
+  const encoder = new TextEncoder();
+  writeStdoutSync(encoder.encode("\r" + line + " ".repeat(Math.max(0, 60 - line.length))));
+}
+
+/**
+ * 结束原地进度条并换行（在最后一次 progressBarLive 后调用，避免后续输出覆盖进度条）
+ */
+export function progressBarLiveFinish(): void {
+  const encoder = new TextEncoder();
+  writeStdoutSync(encoder.encode("\n"));
 }

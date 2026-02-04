@@ -1,7 +1,10 @@
 {
   "name": "@dreamer/console",
-  "version": "1.0.3-beta.7",
+  "version": "1.0.3-beta.8",
   "license": "MIT",
+  "tasks": {
+    "test": "deno test -A tests"
+  },
   "exports": {
     ".": "./src/mod.ts"
   },

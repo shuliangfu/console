@@ -4,19 +4,105 @@
  */
 
 import { colors } from "./ansi.ts";
+
+/** 延迟指定毫秒 */
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+/** prompt 可选配置（默认值、超时） */
+export interface PromptOptions {
+  /** 空回车时返回的默认值 */
+  default?: string;
+  /** 超时毫秒数，超时后返回 default 或 null */
+  timeoutMs?: number;
+}
+
+/** input 可选配置（默认值、超时） */
+export interface InputOptions {
+  /** 空回车时返回的默认值 */
+  default?: string;
+  /** 超时毫秒数，超时后返回 default 或空字符串 */
+  timeoutMs?: number;
+}
 import { error } from "./output.ts";
 import {
   exit,
+  isStdinTerminal,
   readStdin,
   setStdinRaw,
   writeStdoutSync,
 } from "./runtime-utils.ts";
 
 /**
+ * 根据 UTF-8 首字节返回该字符占用的字节数（1～4）
+ */
+function utf8LeadLength(b: number): number {
+  if (b <= 0x7f) return 1;
+  if (b >= 0xc2 && b <= 0xdf) return 2;
+  if (b >= 0xe0 && b <= 0xef) return 3;
+  if (b >= 0xf0 && b <= 0xf4) return 4;
+  return 1;
+}
+
+/**
+ * 在 TTY 下用原始模式读一行（逐字符读取、回显，遇 \r 或 \n 结束）
+ * 支持 UTF-8 多字节字符（如中文）；避免通过 ./script 执行时终端未把 \r 当行尾导致回车无效
+ */
+async function readLineRaw(): Promise<string | null> {
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
+  let input = "";
+  const pending: number[] = [];
+  let isRaw = false;
+  try {
+    if (setStdinRaw(true, { cbreak: true })) {
+      isRaw = true;
+    }
+    while (true) {
+      const buf = new Uint8Array(10);
+      const n = await readStdin(buf);
+      if (n === null || n === 0) continue;
+      const b = buf[0];
+      if (b === 0x0d || b === 0x0a) {
+        break;
+      }
+      if (b === 0x03) {
+        writeStdoutSync(encoder.encode("\n"));
+        exit(0);
+      }
+      if (b === 0x7f || b === 0x08) {
+        if (input.length > 0) {
+          input = input.slice(0, -1);
+          writeStdoutSync(encoder.encode("\b \b"));
+        }
+        continue;
+      }
+      pending.push(b);
+      const need = pending.length >= 1 ? utf8LeadLength(pending[0]) : 0;
+      if (need > 0 && pending.length >= need) {
+        const bytes = new Uint8Array(pending.splice(0, need));
+        const ch = decoder.decode(bytes);
+        input += ch;
+        writeStdoutSync(bytes);
+      }
+    }
+    writeStdoutSync(encoder.encode("\n"));
+    return input.trim() || null;
+  } finally {
+    if (isRaw) setStdinRaw(false);
+  }
+}
+
+/**
  * 读取一行输入（读到 \r 或 \n 为止，兼容不同终端的回车）
+ * 当 stdin 为 TTY 时使用原始模式，与 deno run / ./script 行为一致
  * @returns 输入的内容
  */
 async function readLine(): Promise<string | null> {
+  if (isStdinTerminal()) {
+    return await readLineRaw();
+  }
   const decoder = new TextDecoder();
   const parts: number[] = [];
   const buf = new Uint8Array(256);
@@ -43,28 +129,45 @@ async function readLine(): Promise<string | null> {
  * 基础输入提示
  * @param message 提示信息
  * @param hidden 是否隐藏输入（用于密码，显示为 *）
+ * @param options 可选：default（空回车时的默认值）、timeoutMs（超时毫秒，超时后返回 default 或 null）
  * @returns 用户输入的内容
  */
 export async function prompt(
   message: string,
   hidden = false,
+  options?: PromptOptions,
 ): Promise<string | null> {
   const encoder = new TextEncoder();
-
-  // 美化提示信息：添加颜色和图标
+  const defaultVal = options?.default;
+  const timeoutMs = options?.timeoutMs;
+  const displayMessage = defaultVal != null
+    ? `${message}${colors.dim} (默认: ${defaultVal})${colors.reset}`
+    : message;
   const formattedMessage =
-    `${colors.cyan}${colors.bright}❯${colors.reset} ${colors.dim}${message}${colors.reset}`;
+    `${colors.cyan}${colors.bright}❯${colors.reset} ${colors.dim}${displayMessage}${colors.reset}`;
 
   writeStdoutSync(encoder.encode(formattedMessage));
 
+  let result: string | null;
   if (hidden) {
-    // 密码输入模式：显示 * 号
-    return await readLineHidden();
+    result = timeoutMs != null
+      ? await Promise.race([
+        readLineHidden(),
+        sleep(timeoutMs).then(() => null),
+      ])
+      : await readLineHidden();
   } else {
-    // 普通输入模式
-    const input = await readLine();
-    return input;
+    result = timeoutMs != null
+      ? await Promise.race([
+        readLine(),
+        sleep(timeoutMs).then(() => null),
+      ])
+      : await readLine();
   }
+  if ((result === null || result.trim() === "") && defaultVal != null) {
+    return defaultVal;
+  }
+  return result;
 }
 
 /**
@@ -168,22 +271,24 @@ export async function confirm(
  * @param message 提示信息
  * @param validator 验证函数，返回错误信息或 null
  * @param required 是否必填
- * @returns 用户输入的内容
+ * @param options 可选：default（空回车时的默认值）、timeoutMs（超时毫秒，超时后返回 default 或空字符串）
+ * @returns 用户输入的内容；required 为 false 且空回车时返回 ""；timeout 时返回 options.default ?? ""
  */
 export async function input(
   message: string,
   validator?: (value: string) => string | null,
   required = true,
+  options?: InputOptions,
 ): Promise<string> {
   while (true) {
-    const value = await prompt(message);
+    const value = await prompt(message, false, options);
 
     if (!value || value.trim() === "") {
       if (required) {
         error("此项为必填项，请输入");
         continue;
       }
-      return "";
+      return options?.default ?? "";
     }
 
     const trimmed = value.trim();
@@ -517,39 +622,65 @@ export async function interactiveMenu(
       const input = decoder.decode(bytes);
 
       // 处理方向键（ANSI 转义序列）
-      // 上箭头: \x1b[A 或 \x1bOA
-      // 下箭头: \x1b[B 或 \x1bOB
-      if (bytes[0] === 0x1b && bytes[1] === 0x5b) {
-        if (bytes[2] === 0x41) {
-          // 上箭头
-          selectedIndex = selectedIndex > 0
-            ? selectedIndex - 1
-            : options.length - 1;
-          // 清除屏幕并重新渲染
-          writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
-          renderMenu();
-        } else if (bytes[2] === 0x42) {
-          // 下箭头
-          selectedIndex = selectedIndex < options.length - 1
-            ? selectedIndex + 1
-            : 0;
-          // 清除屏幕并重新渲染
-          writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
-          renderMenu();
+      // 上箭头: \x1b[A 或 \x1bOA；下箭头: \x1b[B 或 \x1bOB
+      // 若只读到 \x1b（分片），短时等待后续字节，避免误判为 Esc
+      if (bytes[0] === 0x1b) {
+        if (n >= 3 && bytes[1] === 0x5b) {
+          if (bytes[2] === 0x41) {
+            selectedIndex = selectedIndex > 0
+              ? selectedIndex - 1
+              : options.length - 1;
+            writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
+            renderMenu();
+          } else if (bytes[2] === 0x42) {
+            selectedIndex = selectedIndex < options.length - 1
+              ? selectedIndex + 1
+              : 0;
+            writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
+            renderMenu();
+          }
+        } else if (n === 1) {
+          const buf2 = new Uint8Array(5);
+          const n2 = await Promise.race([
+            readStdin(buf2),
+            sleep(25).then(() => null),
+          ]);
+          if (n2 !== null && n2 >= 2 && buf2[0] === 0x5b) {
+            if (buf2[1] === 0x41) {
+              selectedIndex = selectedIndex > 0
+                ? selectedIndex - 1
+                : options.length - 1;
+              writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
+              renderMenu();
+            } else if (buf2[1] === 0x42) {
+              selectedIndex = selectedIndex < options.length - 1
+                ? selectedIndex + 1
+                : 0;
+              writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
+              renderMenu();
+            }
+          } else {
+            writeStdoutSync(encoder.encode("\x1b[?25h"));
+            if (isRaw) setStdinRaw(false);
+            exit(0);
+          }
+        } else {
+          writeStdoutSync(encoder.encode("\x1b[?25h"));
+          if (isRaw) setStdinRaw(false);
+          exit(0);
         }
-      } else if (
+        continue;
+      }
+
+      if (
         input === "\r" || input === "\n" || bytes[0] === 0x0d ||
         bytes[0] === 0x0a
       ) {
-        // Enter 键
         break;
-      } else if (input === "\x1b" || bytes[0] === 0x1b || bytes[0] === 0x03) {
-        // Esc 或 Ctrl+C
-        // 恢复终端
+      }
+      if (bytes[0] === 0x03) {
         writeStdoutSync(encoder.encode("\x1b[?25h"));
-        if (isRaw) {
-          setStdinRaw(false);
-        }
+        if (isRaw) setStdinRaw(false);
         exit(0);
       }
     }
@@ -569,6 +700,292 @@ export async function interactiveMenu(
     console.log(
       `\n${colors.yellow}警告: 不支持交互式菜单，使用普通选择模式${colors.reset}\n`,
     );
+    return await select(message, options, defaultValue);
+  }
+}
+
+/** 多选菜单的配置 */
+export interface InteractiveMultiMenuOptions {
+  /** 最少选择数量 */
+  min?: number;
+  /** 最多选择数量（不设则不限制） */
+  max?: number;
+}
+
+/**
+ * 交互式多选菜单（空格勾选/取消，Enter 确认）
+ * @param message 提示信息
+ * @param options 选项列表
+ * @param initialSelected 初始选中索引（默认空）
+ * @param menuOptions min/max 限制
+ * @returns 选中的选项索引数组
+ */
+export async function interactiveMultiMenu(
+  message: string,
+  options: string[],
+  initialSelected: number[] = [],
+  menuOptions: InteractiveMultiMenuOptions = {},
+): Promise<number[]> {
+  const encoder = new TextEncoder();
+  const { min = 0, max } = menuOptions;
+  const selected = new Set(initialSelected.filter((i) => i >= 0 && i < options.length));
+  let cursor = selected.size > 0 ? Math.min(...selected) : 0;
+
+  const renderMenu = () => {
+    writeStdoutSync(encoder.encode("\r\x1b[K"));
+    console.log(`${colors.cyan}${colors.bright}${message}${colors.reset}\n`);
+    options.forEach((option, index) => {
+      const checked = selected.has(index);
+      const isCursor = index === cursor;
+      const check = checked ? `${colors.green}●${colors.reset}` : "○";
+      const line = isCursor
+        ? `  ${colors.green}${colors.bright}▶${colors.reset} ${check} ${colors.green}${colors.bright}${option}${colors.reset}`
+        : `    ${check} ${colors.dim}${option}${colors.reset}`;
+      console.log(line);
+    });
+    const minText = min > 0 ? `，至少 ${min} 项` : "";
+    const maxText = max != null ? `，最多 ${max} 项` : "";
+    console.log(
+      `\n${colors.dim}空格勾选/取消，↑↓ 移动，Enter 确认${minText}${maxText}${colors.reset}`,
+    );
+  };
+
+  try {
+    writeStdoutSync(encoder.encode("\x1b[?25l"));
+    const isRaw = setStdinRaw(true, { cbreak: true });
+    renderMenu();
+
+    while (true) {
+      const buf = new Uint8Array(10);
+      const n = await readStdin(buf);
+      if (n === null || n === 0) continue;
+      const bytes = buf.subarray(0, n);
+
+      if (bytes[0] === 0x1b) {
+        if (n >= 3 && bytes[1] === 0x5b) {
+          if (bytes[2] === 0x41) {
+            cursor = cursor > 0 ? cursor - 1 : options.length - 1;
+            writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
+            renderMenu();
+          } else if (bytes[2] === 0x42) {
+            cursor = cursor < options.length - 1 ? cursor + 1 : 0;
+            writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
+            renderMenu();
+          }
+        } else if (n === 1) {
+          const buf2 = new Uint8Array(5);
+          const n2 = await Promise.race([readStdin(buf2), sleep(25).then(() => null)]);
+          if (n2 !== null && n2 >= 2 && buf2[0] === 0x5b) {
+            if (buf2[1] === 0x41) {
+              cursor = cursor > 0 ? cursor - 1 : options.length - 1;
+              writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
+              renderMenu();
+            } else if (buf2[1] === 0x42) {
+              cursor = cursor < options.length - 1 ? cursor + 1 : 0;
+              writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
+              renderMenu();
+            }
+          } else {
+            writeStdoutSync(encoder.encode("\x1b[?25h"));
+            if (isRaw) setStdinRaw(false);
+            exit(0);
+          }
+        } else {
+          writeStdoutSync(encoder.encode("\x1b[?25h"));
+          if (isRaw) setStdinRaw(false);
+          exit(0);
+        }
+        continue;
+      }
+
+      if (bytes[0] === 0x20) {
+        if (selected.has(cursor)) {
+          selected.delete(cursor);
+        } else {
+          if (max != null && selected.size >= max) continue;
+          selected.add(cursor);
+        }
+        writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
+        renderMenu();
+        continue;
+      }
+
+      if (bytes[0] === 0x0d || bytes[0] === 0x0a) {
+        const arr = [...selected].sort((a, b) => a - b);
+        if (arr.length < min) continue;
+        writeStdoutSync(encoder.encode("\x1b[?25h"));
+        if (isRaw) setStdinRaw(false);
+        writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
+        return arr;
+      }
+
+      if (bytes[0] === 0x03) {
+        writeStdoutSync(encoder.encode("\x1b[?25h"));
+        if (isRaw) setStdinRaw(false);
+        exit(0);
+      }
+    }
+  } catch (_err) {
+    writeStdoutSync(encoder.encode("\x1b[?25h"));
+    setStdinRaw(false);
+    return await multiSelect(message, options, min, max);
+  }
+}
+
+/**
+ * 可搜索的交互式单选菜单（输入过滤，↑↓ 选择，Enter 确认）
+ * @param message 提示信息
+ * @param options 选项列表
+ * @param defaultValue 默认选中索引
+ * @returns 选中的选项索引（在原始 options 中的索引）
+ */
+export async function interactiveMenuSearch(
+  message: string,
+  options: string[],
+  defaultValue = 0,
+): Promise<number> {
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
+  let search = "";
+  let selectedIndex = defaultValue >= 0 && defaultValue < options.length ? defaultValue : 0;
+  let filteredIndices = options.map((_, i) => i);
+
+  const filterOptions = () => {
+    if (!search.trim()) {
+      filteredIndices = options.map((_, i) => i);
+      return;
+    }
+    const lower = search.toLowerCase();
+    filteredIndices = options
+      .map((text, i) => (text.toLowerCase().includes(lower) ? i : -1))
+      .filter((i) => i >= 0);
+    if (filteredIndices.length > 0 && !filteredIndices.includes(selectedIndex)) {
+      selectedIndex = filteredIndices[0];
+    } else if (filteredIndices.length === 0) {
+      selectedIndex = -1;
+    }
+  };
+
+  const renderMenu = () => {
+    writeStdoutSync(encoder.encode("\r\x1b[K"));
+    console.log(`${colors.cyan}${colors.bright}${message}${colors.reset}\n`);
+    if (search) {
+      console.log(`${colors.dim}筛选: ${search}${colors.reset}\n`);
+    }
+    const toShow = filteredIndices.length === 0
+      ? [{ index: -1, text: "（无匹配）" }]
+      : filteredIndices.map((i) => ({ index: i, text: options[i] }));
+    toShow.forEach(({ index, text }) => {
+      const isSel = index === selectedIndex;
+      const line = isSel
+        ? `  ${colors.green}${colors.bright}▶${colors.reset} ${colors.green}${colors.bright}${text}${colors.reset}`
+        : `    ${colors.dim}${text}${colors.reset}`;
+      console.log(line);
+    });
+    console.log(
+      `\n${colors.dim}输入过滤，↑↓ 选择，Enter 确认，Esc 取消${colors.reset}`,
+    );
+  };
+
+  try {
+    writeStdoutSync(encoder.encode("\x1b[?25l"));
+    const isRaw = setStdinRaw(true, { cbreak: true });
+    filterOptions();
+    renderMenu();
+
+    while (true) {
+      const buf = new Uint8Array(10);
+      const n = await readStdin(buf);
+      if (n === null || n === 0) continue;
+      const bytes = buf.subarray(0, n);
+
+      if (bytes[0] === 0x1b) {
+        if (n >= 3 && bytes[1] === 0x5b) {
+          if (bytes[2] === 0x41) {
+            if (filteredIndices.length > 0) {
+              const idx = filteredIndices.indexOf(selectedIndex);
+              selectedIndex = idx <= 0
+                ? filteredIndices[filteredIndices.length - 1]
+                : filteredIndices[idx - 1];
+            }
+            writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
+            renderMenu();
+          } else if (bytes[2] === 0x42) {
+            if (filteredIndices.length > 0) {
+              const idx = filteredIndices.indexOf(selectedIndex);
+              selectedIndex = idx < 0 || idx >= filteredIndices.length - 1
+                ? filteredIndices[0]
+                : filteredIndices[idx + 1];
+            }
+            writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
+            renderMenu();
+          }
+        } else if (n === 1) {
+          const buf2 = new Uint8Array(5);
+          const n2 = await Promise.race([readStdin(buf2), sleep(25).then(() => null)]);
+          if (n2 !== null && n2 >= 2 && buf2[0] === 0x5b) {
+            if (buf2[1] === 0x41) {
+              if (filteredIndices.length > 0) {
+                const idx = filteredIndices.indexOf(selectedIndex);
+                selectedIndex = idx <= 0 ? filteredIndices[filteredIndices.length - 1] : filteredIndices[idx - 1];
+              }
+              writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
+              renderMenu();
+            } else if (buf2[1] === 0x42) {
+              if (filteredIndices.length > 0) {
+                const idx = filteredIndices.indexOf(selectedIndex);
+                selectedIndex = idx < 0 || idx >= filteredIndices.length - 1 ? filteredIndices[0] : filteredIndices[idx + 1];
+              }
+              writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
+              renderMenu();
+            }
+          } else {
+            writeStdoutSync(encoder.encode("\x1b[?25h"));
+            if (isRaw) setStdinRaw(false);
+            exit(0);
+          }
+        } else {
+          writeStdoutSync(encoder.encode("\x1b[?25h"));
+          if (isRaw) setStdinRaw(false);
+          exit(0);
+        }
+        continue;
+      }
+
+      if (bytes[0] === 0x0d || bytes[0] === 0x0a) {
+        if (filteredIndices.length > 0 && selectedIndex >= 0) {
+          writeStdoutSync(encoder.encode("\x1b[?25h"));
+          if (isRaw) setStdinRaw(false);
+          writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
+          return selectedIndex;
+        }
+        continue;
+      }
+
+      if (bytes[0] === 0x03) {
+        writeStdoutSync(encoder.encode("\x1b[?25h"));
+        if (isRaw) setStdinRaw(false);
+        exit(0);
+      }
+
+      if (bytes[0] === 0x7f || bytes[0] === 0x08) {
+        search = search.slice(0, -1);
+        filterOptions();
+        writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
+        renderMenu();
+        continue;
+      }
+
+      if (bytes[0] >= 32 && bytes[0] <= 126) {
+        search += decoder.decode(bytes.subarray(0, 1));
+        filterOptions();
+        writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
+        renderMenu();
+      }
+    }
+  } catch (_err) {
+    writeStdoutSync(encoder.encode("\x1b[?25h"));
+    setStdinRaw(false);
     return await select(message, options, defaultValue);
   }
 }
