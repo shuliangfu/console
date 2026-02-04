@@ -4,7 +4,7 @@
 
 [![JSR](https://jsr.io/badges/@dreamer/console)](https://jsr.io/@dreamer/console)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE.md)
-[![Tests](https://img.shields.io/badge/tests-87%20passed-brightgreen)](./TEST_REPORT.md)
+[![Tests](https://img.shields.io/badge/tests-101%20passed-brightgreen)](./TEST_REPORT.md)
 
 ---
 
@@ -606,8 +606,8 @@ bun test tests/mod.test.ts
 详细的测试报告请查看 [TEST_REPORT.md](./TEST_REPORT.md)。
 
 测试覆盖包括：
-- ✅ 87 个测试用例全部通过
-- ✅ 7 个功能模块完整测试
+- ✅ 101 个测试用例全部通过
+- ✅ 8 个功能模块完整测试（含 Spinner、mod 统一导出与类型）
 - ✅ Deno 和 Bun 跨运行时兼容性验证
 - ✅ 边界情况和错误处理测试
 

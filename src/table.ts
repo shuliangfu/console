@@ -362,9 +362,13 @@ export function progressBarLive(
   const bar = colors.green + "█".repeat(filled) + colors.gray +
     "░".repeat(empty) + colors.reset;
   const percentText = `${percentage}%`;
-  const line = label ? `${label} ${bar} ${percentText}` : `${bar} ${percentText}`;
+  const line = label
+    ? `${label} ${bar} ${percentText}`
+    : `${bar} ${percentText}`;
   const encoder = new TextEncoder();
-  writeStdoutSync(encoder.encode("\r" + line + " ".repeat(Math.max(0, 60 - line.length))));
+  writeStdoutSync(
+    encoder.encode("\r" + line + " ".repeat(Math.max(0, 60 - line.length))),
+  );
 }
 
 /**

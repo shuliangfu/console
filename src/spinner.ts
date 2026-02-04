@@ -56,7 +56,9 @@ export function succeedSpinner(message?: string): void {
   if (message !== undefined && message !== "") {
     const encoder = new TextEncoder();
     writeStdoutSync(encoder.encode("\r" + " ".repeat(80) + "\r"));
-    console.log(`${colorize("✓", "green", true)} ${colorize(message, "green")}`);
+    console.log(
+      `${colorize("✓", "green", true)} ${colorize(message, "green")}`,
+    );
   }
 }
 

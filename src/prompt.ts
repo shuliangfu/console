@@ -4,6 +4,14 @@
  */
 
 import { colors } from "./ansi.ts";
+import { error } from "./output.ts";
+import {
+  exit,
+  isStdinTerminal,
+  readStdin,
+  setStdinRaw,
+  writeStdoutSync,
+} from "./runtime-utils.ts";
 
 /** 延迟指定毫秒 */
 function sleep(ms: number): Promise<void> {
@@ -25,14 +33,6 @@ export interface InputOptions {
   /** 超时毫秒数，超时后返回 default 或空字符串 */
   timeoutMs?: number;
 }
-import { error } from "./output.ts";
-import {
-  exit,
-  isStdinTerminal,
-  readStdin,
-  setStdinRaw,
-  writeStdoutSync,
-} from "./runtime-utils.ts";
 
 /**
  * 根据 UTF-8 首字节返回该字符占用的字节数（1～4）
@@ -728,7 +728,9 @@ export async function interactiveMultiMenu(
 ): Promise<number[]> {
   const encoder = new TextEncoder();
   const { min = 0, max } = menuOptions;
-  const selected = new Set(initialSelected.filter((i) => i >= 0 && i < options.length));
+  const selected = new Set(
+    initialSelected.filter((i) => i >= 0 && i < options.length),
+  );
   let cursor = selected.size > 0 ? Math.min(...selected) : 0;
 
   const renderMenu = () => {
@@ -774,7 +776,10 @@ export async function interactiveMultiMenu(
           }
         } else if (n === 1) {
           const buf2 = new Uint8Array(5);
-          const n2 = await Promise.race([readStdin(buf2), sleep(25).then(() => null)]);
+          const n2 = await Promise.race([
+            readStdin(buf2),
+            sleep(25).then(() => null),
+          ]);
           if (n2 !== null && n2 >= 2 && buf2[0] === 0x5b) {
             if (buf2[1] === 0x41) {
               cursor = cursor > 0 ? cursor - 1 : options.length - 1;
@@ -847,7 +852,9 @@ export async function interactiveMenuSearch(
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
   let search = "";
-  let selectedIndex = defaultValue >= 0 && defaultValue < options.length ? defaultValue : 0;
+  let selectedIndex = defaultValue >= 0 && defaultValue < options.length
+    ? defaultValue
+    : 0;
   let filteredIndices = options.map((_, i) => i);
 
   const filterOptions = () => {
@@ -859,7 +866,9 @@ export async function interactiveMenuSearch(
     filteredIndices = options
       .map((text, i) => (text.toLowerCase().includes(lower) ? i : -1))
       .filter((i) => i >= 0);
-    if (filteredIndices.length > 0 && !filteredIndices.includes(selectedIndex)) {
+    if (
+      filteredIndices.length > 0 && !filteredIndices.includes(selectedIndex)
+    ) {
       selectedIndex = filteredIndices[0];
     } else if (filteredIndices.length === 0) {
       selectedIndex = -1;
@@ -922,19 +931,26 @@ export async function interactiveMenuSearch(
           }
         } else if (n === 1) {
           const buf2 = new Uint8Array(5);
-          const n2 = await Promise.race([readStdin(buf2), sleep(25).then(() => null)]);
+          const n2 = await Promise.race([
+            readStdin(buf2),
+            sleep(25).then(() => null),
+          ]);
           if (n2 !== null && n2 >= 2 && buf2[0] === 0x5b) {
             if (buf2[1] === 0x41) {
               if (filteredIndices.length > 0) {
                 const idx = filteredIndices.indexOf(selectedIndex);
-                selectedIndex = idx <= 0 ? filteredIndices[filteredIndices.length - 1] : filteredIndices[idx - 1];
+                selectedIndex = idx <= 0
+                  ? filteredIndices[filteredIndices.length - 1]
+                  : filteredIndices[idx - 1];
               }
               writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
               renderMenu();
             } else if (buf2[1] === 0x42) {
               if (filteredIndices.length > 0) {
                 const idx = filteredIndices.indexOf(selectedIndex);
-                selectedIndex = idx < 0 || idx >= filteredIndices.length - 1 ? filteredIndices[0] : filteredIndices[idx + 1];
+                selectedIndex = idx < 0 || idx >= filteredIndices.length - 1
+                  ? filteredIndices[0]
+                  : filteredIndices[idx + 1];
               }
               writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
               renderMenu();

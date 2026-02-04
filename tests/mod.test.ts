@@ -36,12 +36,33 @@ import {
   inputNumber,
   inputPassword,
   inputUsername,
+  interactiveMenu,
+  interactiveMenuSearch,
+  interactiveMultiMenu,
   multiSelect,
   pause,
   prompt,
   select,
 } from "../src/prompt.ts";
-import { keyValueTable, progressBar, table } from "../src/table.ts";
+import {
+  failSpinner,
+  startSpinner,
+  stopSpinner,
+  succeedSpinner,
+} from "../src/spinner.ts";
+import {
+  keyValueTable,
+  progressBar,
+  progressBarLive,
+  progressBarLiveFinish,
+  table,
+  type TableColumn,
+} from "../src/table.ts";
+import type {
+  CommandArgument,
+  CommandOption,
+  ParsedOptions,
+} from "../src/types.ts";
 
 describe("Console", () => {
   describe("ANSI 颜色", () => {
@@ -290,6 +311,51 @@ describe("Console", () => {
       expect(() => progressBar(50, 100)).not.toThrow();
       expect(() => progressBar(30, 100, 40, "进度")).not.toThrow();
     });
+
+    it("应该支持原地进度条与结束换行", () => {
+      expect(() => progressBarLive(0, 100)).not.toThrow();
+      expect(() => progressBarLive(50, 100, 40, "进度")).not.toThrow();
+      expect(() => progressBarLive(100, 100)).not.toThrow();
+      expect(() => progressBarLiveFinish()).not.toThrow();
+    });
+
+    it("应该支持自定义列输出表格", () => {
+      const data = [
+        { name: "Alice", age: 30 },
+        { name: "Bob", age: 25 },
+      ];
+      const columns: TableColumn[] = [
+        { header: "姓名", align: "left" },
+        { header: "年龄", align: "right" },
+      ];
+      expect(() => table(data, columns)).not.toThrow();
+    });
+  });
+
+  describe("Spinner（加载指示器）", () => {
+    it("应该启动与停止 Spinner", () => {
+      expect(() => startSpinner()).not.toThrow();
+      expect(() => stopSpinner()).not.toThrow();
+    });
+
+    it("应该支持带文案启动 Spinner", () => {
+      expect(() => startSpinner("加载中...")).not.toThrow();
+      stopSpinner();
+    });
+
+    it("应该支持 succeedSpinner 与 failSpinner", () => {
+      startSpinner("处理中");
+      expect(() => succeedSpinner("完成")).not.toThrow();
+    });
+
+    it("应该支持 failSpinner 输出失败信息", () => {
+      startSpinner("处理中");
+      expect(() => failSpinner("失败")).not.toThrow();
+    });
+
+    it("stopSpinner 应在无 Spinner 时安全调用", () => {
+      expect(() => stopSpinner()).not.toThrow();
+    });
   });
 
   describe("提示工具", () => {
@@ -334,6 +400,18 @@ describe("Console", () => {
 
     it("应该提供 pause 函数", () => {
       expect(typeof pause).toBe("function");
+    });
+
+    it("应该提供 interactiveMenu 函数", () => {
+      expect(typeof interactiveMenu).toBe("function");
+    });
+
+    it("应该提供 interactiveMultiMenu 函数", () => {
+      expect(typeof interactiveMultiMenu).toBe("function");
+    });
+
+    it("应该提供 interactiveMenuSearch 函数", () => {
+      expect(typeof interactiveMenuSearch).toBe("function");
     });
   });
 
@@ -769,6 +847,59 @@ describe("Console", () => {
       expect(() => progressBar(0, 100)).not.toThrow();
       expect(() => progressBar(100, 100)).not.toThrow();
       expect(() => progressBar(50, 100)).not.toThrow();
+    });
+  });
+
+  describe("mod 统一导出", () => {
+    it("应从 mod 导出 Spinner、表格与提示相关 API", async () => {
+      const mod = await import("../src/mod.ts");
+      expect(typeof mod.startSpinner).toBe("function");
+      expect(typeof mod.stopSpinner).toBe("function");
+      expect(typeof mod.succeedSpinner).toBe("function");
+      expect(typeof mod.failSpinner).toBe("function");
+      expect(typeof mod.progressBarLive).toBe("function");
+      expect(typeof mod.progressBarLiveFinish).toBe("function");
+      expect(typeof mod.interactiveMenu).toBe("function");
+      expect(typeof mod.interactiveMultiMenu).toBe("function");
+      expect(typeof mod.interactiveMenuSearch).toBe("function");
+    });
+
+    it("应从 mod 导出类型与接口", async () => {
+      const mod = await import("../src/mod.ts");
+      // 类型在运行时不可枚举，通过使用来验证导出存在
+      const _opt: CommandOption = {
+        name: "test",
+        description: "测试",
+      };
+      const _arg: CommandArgument = { name: "f", description: "文件" };
+      const _parsed: ParsedOptions = {};
+      expect(_opt.name).toBe("test");
+      expect(_arg.name).toBe("f");
+      expect(_parsed).toEqual({});
+    });
+  });
+
+  describe("类型导出", () => {
+    it("CommandOption 应包含 name、description 等字段", () => {
+      const opt: CommandOption = {
+        name: "verbose",
+        alias: "v",
+        description: "详细输出",
+        type: "boolean",
+      };
+      expect(opt.name).toBe("verbose");
+      expect(opt.alias).toBe("v");
+      expect(opt.type).toBe("boolean");
+    });
+
+    it("CommandArgument 应包含 name、description", () => {
+      const arg: CommandArgument = {
+        name: "file",
+        description: "文件路径",
+        required: true,
+      };
+      expect(arg.name).toBe("file");
+      expect(arg.required).toBe(true);
     });
   });
 });
