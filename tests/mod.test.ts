@@ -15,7 +15,10 @@ import {
   stripAnsiCodes,
 } from "../src/ansi.ts";
 import { Command } from "../src/command.ts";
-import { CommandHelpGenerator } from "../src/help.ts";
+import {
+  CommandHelpGenerator,
+  type HelpConfig,
+} from "../src/help.ts";
 import {
   error,
   info,
@@ -676,6 +679,56 @@ describe("Console", () => {
       const length = CommandHelpGenerator.calculateOptionDisplayLength(option);
       expect(length).toBeGreaterThan(0);
     });
+
+    it("HelpConfig 子命令应支持 aliases 字段", () => {
+      const config: HelpConfig = {
+        name: "cli",
+        aliases: [],
+        options: [],
+        arguments: [],
+        examples: [],
+        subcommands: new Map([
+          [
+            "generate",
+            {
+              description: "生成代码",
+              options: [],
+              aliases: ["g"],
+            },
+          ],
+          [
+            "migrate",
+            {
+              description: "数据库迁移",
+              options: [],
+              aliases: ["m"],
+            },
+          ],
+        ]),
+      };
+      expect(config.subcommands.get("generate")?.aliases).toEqual(["g"]);
+      expect(config.subcommands.get("migrate")?.aliases).toEqual(["m"]);
+    });
+
+    it("帮助输出应包含子命令别名（如 generate (g)）", async () => {
+      // 通过子进程运行帮助脚本，避免 showHelp 中的 exit(0) 终止测试
+      const scriptPath = new URL("./help-output-script.ts", import.meta.url)
+        .pathname;
+      const cmd = new Deno.Command(Deno.execPath(), {
+        args: ["run", "-A", "--no-prompt", scriptPath],
+        stdin: "null",
+        stdout: "piped",
+        stderr: "piped",
+        env: { NO_COLOR: "1" }, // 禁用颜色，便于断言纯文本
+      });
+      const { stdout, success } = await cmd.output();
+      const output = new TextDecoder().decode(stdout);
+      // 移除 ANSI 代码（若环境仍输出颜色）后断言
+      const plain = stripAnsiCodes(output);
+      expect(plain).toContain("generate (g)");
+      expect(plain).toContain("migrate (m)");
+      expect(success).toBe(true);
+    });
   });
 
   describe("Command 执行功能", () => {
@@ -733,6 +786,58 @@ describe("Console", () => {
       });
       await command.execute(["s"]);
       expect(subExecuted).toBe(true);
+    });
+
+    it("子命令通过 alias() 注册别名后应能正确路由", async () => {
+      let subExecuted = false;
+      const command = new Command("test", "测试命令");
+      const subcommand = command.command("generate", "生成代码");
+      subcommand.alias("g"); // 子命令 alias() 会同时注册到父级 subcommandAliases
+      subcommand.keepAlive();
+      subcommand.action(async () => {
+        subExecuted = true;
+      });
+      await command.execute(["g"]);
+      expect(subExecuted).toBe(true);
+    });
+
+    it("子命令 alias() 应支持多个别名", async () => {
+      let subExecuted = false;
+      const command = new Command("test", "测试命令");
+      const subcommand = command.command("migrate", "数据库迁移");
+      subcommand.alias("m");
+      subcommand.alias("mi"); // 支持多个别名
+      subcommand.keepAlive();
+      subcommand.action(async () => {
+        subExecuted = true;
+      });
+      await command.execute(["m"]);
+      expect(subExecuted).toBe(true);
+      subExecuted = false;
+      await command.execute(["mi"]);
+      expect(subExecuted).toBe(true);
+    });
+
+    it("子命令 alias() 与 subcommandAlias() 应能共存", async () => {
+      let genExecuted = false;
+      let migExecuted = false;
+      const command = new Command("test", "测试命令");
+      const gen = command.command("generate", "生成代码").alias("g");
+      const mig = command.command("migrate", "数据库迁移");
+      command.subcommandAlias("m", "migrate"); // 使用 subcommandAlias 添加
+      gen.keepAlive();
+      mig.keepAlive();
+      gen.action(async () => {
+        genExecuted = true;
+      });
+      mig.action(async () => {
+        migExecuted = true;
+      });
+      await command.execute(["g"]);
+      expect(genExecuted).toBe(true);
+      genExecuted = false;
+      await command.execute(["m"]);
+      expect(migExecuted).toBe(true);
     });
 
     it("应该显示版本信息", async () => {

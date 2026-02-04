@@ -4,7 +4,7 @@
 
 [![JSR](https://jsr.io/badges/@dreamer/console)](https://jsr.io/@dreamer/console)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE.md)
-[![Tests](https://img.shields.io/badge/tests-101%20passed-brightgreen)](./TEST_REPORT.md)
+[![Tests](https://img.shields.io/badge/tests-106%20passed-brightgreen)](./TEST_REPORT.md)
 
 ---
 
@@ -178,6 +178,7 @@ const app = new Command("app", "应用程序");
 
 // 创建子命令
 const createCmd = app.command("create", "创建资源")
+  .alias("c")  // 子命令别名，帮助中显示为 "create (c)"，支持 "app c" 路由
   .option({
     name: "name",
     alias: "n",
@@ -188,9 +189,7 @@ const createCmd = app.command("create", "创建资源")
   .action(async (args, options) => {
     console.log(`创建资源: ${options.name}`);
   });
-
-// 为子命令添加别名
-app.subcommandAlias("c", "create");
+// 也可使用 app.subcommandAlias("c", "create") 添加别名
 
 await app.execute();
 ```
@@ -472,6 +471,7 @@ clearLine(); // 清除当前行
 ##### 子命令
 
 - **`command(name: string, description?: string): Command`** - 添加子命令
+- **`subcommand.alias(alias: string): this`** - 子命令调用，注册别名（帮助中显示如 `create (c)`，支持 `app c` 路由）
 - **`subcommandAlias(alias: string, commandName: string): this`** - 为子命令添加别名
 
 ##### 其他

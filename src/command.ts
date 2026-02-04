@@ -180,6 +180,8 @@ export class Command {
 
   /**
    * 添加子命令
+   * 子命令调用 alias() 时，会同时注册到父级的 subcommandAliases，使别名（如 g、m）能正确路由
+   *
    * @param name 子命令名称
    * @param description 子命令描述
    * @returns 子命令实例
@@ -187,6 +189,14 @@ export class Command {
   command(name: string, description?: string): Command {
     const subcommand = new Command(name, description);
     this.subcommands.set(name, subcommand);
+
+    // 包装 alias：子命令的 alias() 同时注册到父级，使 "dweb g"、"dweb m" 等能正确路由
+    const originalAlias = subcommand.alias.bind(subcommand);
+    subcommand.alias = (alias: string) => {
+      originalAlias(alias);
+      this.subcommandAliases.set(alias, name);
+      return subcommand;
+    };
     return subcommand;
   }
 
@@ -218,13 +228,19 @@ export class Command {
       options: this.options,
       arguments: this.arguments,
       subcommands: new Map(
-        Array.from(this.subcommands.entries()).map(([name, cmd]) => [
-          name,
-          {
-            description: cmd.description,
-            options: cmd.options,
-          },
-        ]),
+        Array.from(this.subcommands.entries()).map(([name, cmd]) => {
+          const aliases = Array.from(this.subcommandAliases.entries())
+            .filter(([, cmdName]) => cmdName === name)
+            .map(([alias]) => alias);
+          return [
+            name,
+            {
+              description: cmd.description,
+              options: cmd.options,
+              aliases: aliases.length > 0 ? aliases : undefined,
+            },
+          ];
+        }),
       ),
     });
   }
@@ -267,6 +283,13 @@ export class Command {
       } else {
         outputError("未设置版本号");
       }
+      return;
+    }
+
+    // 有子命令但未匹配到：直接显示帮助，不提示「未设置处理函数」（根命令作为路由器无需 handler）
+    if (this.subcommands.size > 0) {
+      this.showHelp();
+      if (!this.isKeepAlive) exit(0);
       return;
     }
 

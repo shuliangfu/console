@@ -9,6 +9,24 @@ import { colors } from "./ansi.ts"
 import { exit } from "./runtime-utils.ts"
 import type { CommandArgument, CommandOption } from "./types.ts"
 
+/** showHelp 的配置类型 */
+export interface HelpConfig {
+  name: string;
+  aliases: string[];
+  description?: string;
+  version?: string;
+  usage?: string;
+  examples: Array<{ command: string; description?: string }>;
+  options: CommandOption[];
+  arguments: CommandArgument[];
+  subcommands: Map<string, {
+    description?: string;
+    options: CommandOption[];
+    /** 子命令别名，用于在帮助中显示如 generate (g) */
+    aliases?: string[];
+  }>;
+}
+
 /**
  * 帮助信息生成器类
  */
@@ -124,20 +142,7 @@ export class CommandHelpGenerator {
    * 生成并显示帮助信息
    * @param config 命令配置
    */
-  static showHelp(config: {
-    name: string;
-    aliases: string[];
-    description?: string;
-    version?: string;
-    usage?: string;
-    examples: Array<{ command: string; description?: string }>;
-    options: CommandOption[];
-    arguments: CommandArgument[];
-    subcommands: Map<string, {
-      description?: string;
-      options: CommandOption[];
-    }>;
-  }): void {
+  static showHelp(config: HelpConfig): void {
     // 显示命令名称和别名
     let nameDisplay =
       `${colors.cyan}${colors.bright}${config.name}${colors.reset}`;
@@ -303,18 +308,29 @@ export class CommandHelpGenerator {
     if (config.subcommands.size > 0) {
       console.log(`${colors.dim}子命令:${colors.reset}`);
 
-      // 计算最长的子命令名称长度，用于对齐
+      // 计算最长的子命令显示长度（含别名），用于对齐
       let maxNameLength = 0;
-      for (const [name] of config.subcommands) {
-        maxNameLength = Math.max(maxNameLength, name.length);
+      for (const [name, cmd] of config.subcommands) {
+        const aliases = cmd.aliases ?? [];
+        const displayName = aliases.length > 0
+          ? `${name} (${aliases.join(", ")})`
+          : name;
+        maxNameLength = Math.max(
+          maxNameLength,
+          this.calculateDisplayWidth(displayName),
+        );
       }
 
       // 统一的对齐宽度（命令名称 + 4个空格）
       const alignWidth = maxNameLength + 4;
 
       for (const [name, cmd] of config.subcommands) {
-        const nameStr = `${colors.cyan}${name}${colors.reset}`;
-        const padding = alignWidth - name.length;
+        const aliases = cmd.aliases ?? [];
+        const displayName = aliases.length > 0
+          ? `${name} (${aliases.join(", ")})`
+          : name;
+        const nameStr = `${colors.cyan}${displayName}${colors.reset}`;
+        const padding = alignWidth - this.calculateDisplayWidth(displayName);
         // 显示子命令名称和描述（子命令名称后加点）
         console.log(
           `  ${nameStr}.${" ".repeat(Math.max(0, padding - 1))}${
