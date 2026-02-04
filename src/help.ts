@@ -321,63 +321,34 @@ export class CommandHelpGenerator {
         );
       }
 
-      // 统一的对齐宽度（命令名称 + 4个空格）
-      const alignWidth = maxNameLength + 4;
+      // 子命令描述起始列
+      const subcommandDescColumn = 2 + maxNameLength + 4; // "  " + name + "." + 4 空格
+      const descColumn = Math.max(subcommandDescColumn, 24);
+      const optionIndent = 6; // 选项缩进（6 空格，比子命令多 2 个字符）
 
       for (const [name, cmd] of config.subcommands) {
         const aliases = cmd.aliases ?? [];
         const displayName = aliases.length > 0
           ? `${name} (${aliases.join(", ")})`
           : name;
+        const displayNameWidth = this.calculateDisplayWidth(displayName);
         const nameStr = `${colors.cyan}${displayName}${colors.reset}`;
-        const padding = alignWidth - this.calculateDisplayWidth(displayName);
+        const padding = descColumn - 2 - displayNameWidth - 1; // "  " + name + "."
         // 显示子命令名称和描述（子命令名称后加点）
         console.log(
-          `  ${nameStr}.${" ".repeat(Math.max(0, padding - 1))}${
+          `  ${nameStr}.${" ".repeat(Math.max(0, padding))}${
             cmd.description || ""
           }`,
         );
 
         // 显示子命令的选项（最多显示前5个常用选项）
         if (cmd.options.length > 0) {
-          // 计算选项名称的最大长度（用于对齐，包含颜色代码但不影响实际宽度）
-          // 先计算所有子命令中选项的最大长度，确保统一对齐
-          let globalMaxOptionLength = 0;
-          for (const [, subCmd] of config.subcommands) {
-            for (const opt of subCmd.options.slice(0, 5)) {
-              const optionDisplayLength = opt.alias
-                ? opt.alias.length + 2 // -a.
-                : opt.name.length + 3; // --name.
-              globalMaxOptionLength = Math.max(
-                globalMaxOptionLength,
-                optionDisplayLength,
-              );
-            }
-          }
-
-          // 计算当前子命令选项的最大长度
-          let maxOptionDisplayLength = 0;
-          for (const opt of cmd.options.slice(0, 5)) {
-            // 计算实际显示长度（不包含 ANSI 颜色代码）
-            const optionDisplayLength = opt.alias
-              ? opt.alias.length + 2 // -a.
-              : opt.name.length + 3; // --name.
-            maxOptionDisplayLength = Math.max(
-              maxOptionDisplayLength,
-              optionDisplayLength,
-            );
-          }
-
-          // 使用全局最大长度确保所有子命令的选项对齐一致
-          const alignToLength = Math.max(
-            maxOptionDisplayLength,
-            globalMaxOptionLength,
-            8,
-          );
-
           const displayOptions = cmd.options.slice(0, 5);
+          // 选项描述起始列：比子命令描述再往后 4 个字符
+          const optionDescColumn = descColumn + 4;
+
           for (const opt of displayOptions) {
-            let optionStr = "    ";
+            let optionStr = " ".repeat(optionIndent);
 
             // 显示选项（优先显示别名，选项名称后加点）
             const optionName = opt.alias
@@ -385,11 +356,11 @@ export class CommandHelpGenerator {
               : `${colors.cyan}--${opt.name}${colors.reset}.`;
             optionStr += optionName;
 
-            // 对齐选项描述（计算实际显示长度，不包含 ANSI 代码）
+            // 对齐选项描述：比子命令描述起始列再往后 4 个字符
             const optionDisplayLength = opt.alias
               ? opt.alias.length + 2 // -a.
               : opt.name.length + 3; // --name.
-            const optionPadding = alignToLength - optionDisplayLength + 2; // +2 用于额外间距
+            const optionPadding = optionDescColumn - optionIndent - optionDisplayLength;
             optionStr += " ".repeat(Math.max(0, optionPadding));
             optionStr += opt.description;
 
@@ -399,7 +370,7 @@ export class CommandHelpGenerator {
           // 如果还有更多选项，显示提示
           if (cmd.options.length > 5) {
             console.log(
-              `    ${colors.dim}... 还有 ${
+              `${" ".repeat(optionIndent)}${colors.dim}... 还有 ${
                 cmd.options.length - 5
               } 个选项${colors.reset}`,
             );
