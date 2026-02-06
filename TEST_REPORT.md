@@ -1,348 +1,347 @@
-# @dreamer/console 测试报告
+# @dreamer/console Test Report
 
-## 测试概览
+## Test Overview
 
-- **测试库版本**: @dreamer/test@^1.0.0-beta.40 
-- **测试框架**: @dreamer/test（兼容 Deno 和 Bun）
-- **测试时间**: 2026-01-13
-- **测试环境**:
+- **Test library version**: @dreamer/test@^1.0.0-beta.40
+- **Test framework**: @dreamer/test (compatible with Deno and Bun)
+- **Test date**: 2026-01-13
+- **Test environment**:
   - Bun 1.3.5
   - Deno 2.6.4
 
-## 测试结果
+## Test Results
 
-### 总体统计
+### Overall Statistics
 
-- **总测试数**: 106
-- **通过**: 106 ✅
-- **失败**: 0
-- **通过率**: 100% ✅
-- **测试执行时间**: ~90-450 毫秒
+- **Total tests**: 106
+- **Passed**: 106 ✅
+- **Failed**: 0
+- **Pass rate**: 100% ✅
+- **Execution time**: ~90-450 ms
 
-### 测试文件统计
+### Test File Statistics
 
-| 测试文件 | 测试数 | 状态 | 说明 |
-|---------|--------|------|------|
-| `mod.test.ts` | 106 | ✅ 全部通过 | 所有功能模块与边界、mod 导出、类型导出、子命令别名测试 |
+| Test File | Tests | Status | Description |
+|-----------|-------|--------|-------------|
+| `mod.test.ts` | 106 | ✅ All passed | All feature modules, edge cases, mod exports, type exports, subcommand alias tests |
 
-## 功能测试详情
+## Feature Test Details
 
-### 1. ANSI 颜色模块 (ansi.ts)
+### 1. ANSI Color Module (ansi.ts)
 
-**测试场景**:
-- ✅ `colors` 常量
-  - 提供所有颜色常量（red, green, blue, yellow, cyan, magenta, reset）
-- ✅ `colorize` 函数
-  - 应用颜色到文本
-  - 支持加粗文本
-  - 根据终端能力自动禁用颜色
-- ✅ `stripAnsiCodes` 函数
-  - 移除 ANSI 代码
-  - 处理包含多个 ANSI 代码的字符串
-  - 处理空字符串
-- ✅ `shouldUseColor` 函数
-  - 检测是否应该使用颜色
-  - 返回布尔值
-- ✅ 光标控制函数
-  - `clearScreen` - 清除屏幕
-  - `hideCursor` - 隐藏光标
-  - `showCursor` - 显示光标
-  - `moveCursor` - 移动光标到指定位置
-  - `clearLine` - 清除当前行
-- ✅ 边界情况测试
-  - 处理所有颜色类型
-  - 支持加粗文本
-  - 正确处理空字符串
-  - 正确处理包含多个 ANSI 代码的字符串
+**Test scenarios**:
+- ✅ `colors` constant
+  - Provides all color constants (red, green, blue, yellow, cyan, magenta, reset)
+- ✅ `colorize` function
+  - Apply color to text
+  - Support bold text
+  - Auto-disable color based on terminal capability
+- ✅ `stripAnsiCodes` function
+  - Remove ANSI codes
+  - Handle strings with multiple ANSI codes
+  - Handle empty strings
+- ✅ `shouldUseColor` function
+  - Detect whether to use color
+  - Returns boolean
+- ✅ Cursor control functions
+  - `clearScreen` - Clear screen
+  - `hideCursor` - Hide cursor
+  - `showCursor` - Show cursor
+  - `moveCursor` - Move cursor to position
+  - `clearLine` - Clear current line
+- ✅ Edge case tests
+  - Handle all color types
+  - Support bold text
+  - Correctly handle empty strings
+  - Correctly handle strings with multiple ANSI codes
 
-**测试结果**: 13 个测试全部通过
+**Test result**: 13 tests all passed
 
-### 2. 输出工具模块 (output.ts)
+### 2. Output Utilities Module (output.ts)
 
-**测试场景**:
-- ✅ `success` - 输出成功消息
-- ✅ `error` - 输出错误消息
-- ✅ `warning` - 输出警告消息
-- ✅ `info` - 输出信息消息
-- ✅ `title` - 输出标题
-- ✅ `separator` - 输出分隔线（支持自定义字符和长度）
-- ✅ `keyValue` - 输出键值对
-- ✅ `keyValuePairs` - 输出多个键值对
-- ✅ `list` - 输出列表（支持自定义前缀）
-- ✅ `numberedList` - 输出编号列表（支持自定义起始编号）
-- ✅ 边界情况测试
-  - 处理空列表
-  - 处理空键值对
-  - 处理长文本（1000+ 字符）
-  - 处理特殊字符（!@#$%^&*() 和中文字符）
+**Test scenarios**:
+- ✅ `success` - Output success message
+- ✅ `error` - Output error message
+- ✅ `warning` - Output warning message
+- ✅ `info` - Output info message
+- ✅ `title` - Output title
+- ✅ `separator` - Output separator (custom char and length)
+- ✅ `keyValue` - Output key-value pair
+- ✅ `keyValuePairs` - Output multiple key-value pairs
+- ✅ `list` - Output list (custom prefix)
+- ✅ `numberedList` - Output numbered list (custom start number)
+- ✅ Edge case tests
+  - Handle empty list
+  - Handle empty key-value pairs
+  - Handle long text (1000+ chars)
+  - Handle special chars (!@#$%^&*() and CJK)
 
-**测试结果**: 14 个测试全部通过
+**Test result**: 14 tests all passed
 
-### 3. Command 类 (command.ts)
+### 3. Command Class (command.ts)
 
-**测试场景**:
-- ✅ 命令创建和配置
-  - 创建命令实例
-  - 设置命令描述
-  - 添加命令别名
-  - 设置命令版本
-  - 设置自定义用法
-  - 设置保持运行
-  - 添加使用示例
-- ✅ 选项和参数注册
-  - 注册选项
-  - 注册参数
-- ✅ 钩子函数
-  - 设置前置钩子
-  - 设置后置钩子
-- ✅ 子命令管理
-  - 添加子命令
-  - 为子命令添加别名
-- ✅ 帮助信息
-  - 显示帮助信息（方法存在性验证）
-- ✅ 执行功能
-  - 执行命令处理函数
-  - 执行前置和后置钩子
-  - 处理子命令
-  - 处理子命令别名
-  - 子命令通过 `alias()` 注册别名后正确路由
-  - 子命令 `alias()` 支持多个别名
-  - 子命令 `alias()` 与 `subcommandAlias()` 共存
-  - 显示版本信息
-  - 传递解析后的参数和选项给处理函数
+**Test scenarios**:
+- ✅ Command creation and config
+  - Create command instance
+  - Set command description
+  - Add command aliases
+  - Set command version
+  - Set custom usage
+  - Set keep running
+  - Add usage examples
+- ✅ Option and argument registration
+  - Register options
+  - Register arguments
+- ✅ Hook functions
+  - Set pre-hook
+  - Set post-hook
+- ✅ Subcommand management
+  - Add subcommands
+  - Add aliases for subcommands
+- ✅ Help info
+  - Show help (method existence validation)
+- ✅ Execution
+  - Execute command handler
+  - Execute pre and post hooks
+  - Handle subcommands
+  - Handle subcommand aliases
+  - Subcommand aliases via `alias()` route correctly
+  - Subcommand `alias()` supports multiple aliases
+  - Subcommand `alias()` coexists with `subcommandAlias()`
+  - Show version info
+  - Pass parsed args and options to handler
 
-**测试结果**: 24 个测试全部通过
+**Test result**: 24 tests all passed
 
-### 4. CommandParser 类 (parser.ts)
+### 4. CommandParser Class (parser.ts)
 
-**测试场景**:
-- ✅ `convertOptionValue` 方法
-  - 转换字符串类型
-  - 转换布尔类型（true, 1, yes / false, 0）
-  - 转换数字类型
-  - 转换数组类型（逗号分隔）
-  - 处理未指定类型（默认为字符串）
-  - 在数字转换失败时抛出错误
-- ✅ `validateOptionValue` 方法
-  - 验证枚举值
-  - 执行自定义验证函数
-  - 在没有验证规则时返回 true
-- ✅ `validateArgumentValue` 方法
-  - 验证枚举值
-  - 执行自定义验证函数
-- ✅ `parseArgs` 方法
-  - 解析简单选项（--verbose）
-  - 解析带值的选项（--port 8080）
-  - 解析使用等号的选项（--port=8080）
-  - 解析短选项（-h）
-  - 解析参数
-  - 设置默认值
-  - 解析数组类型选项
+**Test scenarios**:
+- ✅ `convertOptionValue` method
+  - Convert string type
+  - Convert boolean type (true, 1, yes / false, 0)
+  - Convert number type
+  - Convert array type (comma-separated)
+  - Handle unspecified type (default string)
+  - Throw on failed number conversion
+- ✅ `validateOptionValue` method
+  - Validate enum values
+  - Run custom validation function
+  - Return true when no validation rules
+- ✅ `validateArgumentValue` method
+  - Validate enum values
+  - Run custom validation function
+- ✅ `parseArgs` method
+  - Parse simple options (--verbose)
+  - Parse options with value (--port 8080)
+  - Parse options with equals (--port=8080)
+  - Parse short options (-h)
+  - Parse arguments
+  - Set default values
+  - Parse array-type options
 
-**测试结果**: 17 个测试全部通过
+**Test result**: 17 tests all passed
 
-### 5. CommandHelpGenerator 类 (help.ts)
+### 5. CommandHelpGenerator Class (help.ts)
 
-**测试场景**:
-- ✅ `calculateDisplayWidth` 方法
-  - 计算字符串显示宽度（支持中文）
-  - 中文字符占 2 个字符宽度
-- ✅ `calculateOptionDisplayLength` 方法
-  - 计算选项显示长度
-  - 计算带必需标记的选项显示长度
-- ✅ `HelpConfig` 子命令支持 `aliases` 字段
-- ✅ 帮助输出包含子命令别名（如 `generate (g)`、`migrate (m)`）
-  - 通过子进程运行帮助脚本验证，避免 `showHelp` 中 `exit(0)` 终止测试
+**Test scenarios**:
+- ✅ `calculateDisplayWidth` method
+  - Calculate string display width (CJK support)
+  - CJK chars count as 2 display width
+- ✅ `calculateOptionDisplayLength` method
+  - Calculate option display length
+  - Calculate option display length with required marker
+- ✅ `HelpConfig` subcommand supports `aliases` field
+- ✅ Help output includes subcommand aliases (e.g. `generate (g)`, `migrate (m)`)
+  - Verified via subprocess to avoid `exit(0)` in `showHelp` terminating tests
 
-**测试结果**: 5 个测试全部通过
+**Test result**: 5 tests all passed
 
-### 6. 表格工具模块 (table.ts)
+### 6. Table Utilities Module (table.ts)
 
-**测试场景**:
-- ✅ `table` 函数
-  - 输出表格
-  - 输出带边框的表格（rounded 样式）
-  - 支持自定义列（TableColumn：header、align）
-- ✅ `keyValueTable` 函数
-  - 输出键值对表格
-- ✅ `progressBar` 函数
-  - 显示进度条
-- ✅ `progressBarLive` / `progressBarLiveFinish` 函数
-  - 原地进度条（同一行刷新）与结束换行
-- ✅ 边界情况测试
-  - 处理空数据
-  - 处理单行数据
-  - 处理不同数据类型（string, number, boolean）
-  - 处理进度条边界值（0%, 50%, 100%）
+**Test scenarios**:
+- ✅ `table` function
+  - Output table
+  - Output bordered table (rounded style)
+  - Custom columns (TableColumn: header, align)
+- ✅ `keyValueTable` function
+  - Output key-value table
+- ✅ `progressBar` function
+  - Show progress bar
+- ✅ `progressBarLive` / `progressBarLiveFinish` functions
+  - In-place progress bar (same-line refresh) and finish with newline
+- ✅ Edge case tests
+  - Handle empty data
+  - Handle single-row data
+  - Handle different data types (string, number, boolean)
+  - Handle progress bar boundary values (0%, 50%, 100%)
 
-**测试结果**: 11 个测试全部通过
+**Test result**: 11 tests all passed
 
-### 6.1 Spinner 模块 (spinner.ts)
+### 6.1 Spinner Module (spinner.ts)
 
-**测试场景**:
-- ✅ `startSpinner` / `stopSpinner` - 启动与停止
-- ✅ `startSpinner("文案")` - 带文案启动
-- ✅ `succeedSpinner` / `failSpinner` - 成功/失败结束并输出
-- ✅ 无 Spinner 时 `stopSpinner` 安全调用
+**Test scenarios**:
+- ✅ `startSpinner` / `stopSpinner` - Start and stop
+- ✅ `startSpinner("message")` - Start with message
+- ✅ `succeedSpinner` / `failSpinner` - Finish with success/failure and output
+- ✅ Safe `stopSpinner` when no spinner running
 
-**测试结果**: 5 个测试全部通过
+**Test result**: 5 tests all passed
 
-### 7. 提示工具模块 (prompt.ts)
+### 7. Prompt Utilities Module (prompt.ts)
 
-**测试场景**:
-- ✅ 函数存在性验证
-  - `prompt` 函数
-  - `confirm` 函数
-  - `select` 函数
-  - `multiSelect` 函数
-  - `input` 函数
-  - `inputEmail` 函数
-  - `inputNumber` 函数
-  - `inputPassword` 函数
-  - `inputUsername` 函数
-  - `pause` 函数
-  - `interactiveMenu` 函数（交互式单选菜单）
-  - `interactiveMultiMenu` 函数（交互式多选菜单）
-  - `interactiveMenuSearch` 函数（可搜索交互式菜单）
+**Test scenarios**:
+- ✅ Function existence validation
+  - `prompt` function
+  - `confirm` function
+  - `select` function
+  - `multiSelect` function
+  - `input` function
+  - `inputEmail` function
+  - `inputNumber` function
+  - `inputPassword` function
+  - `inputUsername` function
+  - `pause` function
+  - `interactiveMenu` function (interactive single-select menu)
+  - `interactiveMultiMenu` function (interactive multi-select menu)
+  - `interactiveMenuSearch` function (searchable interactive menu)
 
-**测试结果**: 13 个测试全部通过
+**Test result**: 13 tests all passed
 
-**注意**：交互式功能难以在自动化测试中完全验证，主要验证函数接口存在性。
+**Note**: Interactive features are hard to fully verify in automated tests; mainly validates function interface existence.
 
-### 8. mod 统一导出与类型导出
+### 8. mod Unified Exports and Type Exports
 
-**测试场景**:
-- ✅ 从 `mod.ts` 导出 Spinner、progressBarLive/progressBarLiveFinish、interactiveMenu/Multi/Search 等 API
-- ✅ 从 `mod.ts` 导出类型（CommandOption、CommandArgument、ParsedOptions 等）
-- ✅ `CommandOption` / `CommandArgument` 结构验证
+**Test scenarios**:
+- ✅ Export Spinner, progressBarLive/progressBarLiveFinish, interactiveMenu/Multi/Search from `mod.ts`
+- ✅ Export types from `mod.ts` (CommandOption, CommandArgument, ParsedOptions, etc.)
+- ✅ `CommandOption` / `CommandArgument` structure validation
 
-**测试结果**: 4 个测试全部通过
+**Test result**: 4 tests all passed
 
-## 测试统计
+## Test Statistics
 
+### By Module
 
-### 按模块分类
-
-| 模块 | 测试用例数 | 通过 | 失败 | 覆盖率 |
-|------|-----------|------|------|--------|
-| ANSI 颜色 | 13 | 13 | 0 | 100% |
-| 输出工具 | 14 | 14 | 0 | 100% |
-| Command 类 | 24 | 24 | 0 | 100% |
+| Module | Test Count | Passed | Failed | Coverage |
+|--------|-------------|--------|--------|----------|
+| ANSI colors | 13 | 13 | 0 | 100% |
+| Output utilities | 14 | 14 | 0 | 100% |
+| Command class | 24 | 24 | 0 | 100% |
 | CommandParser | 17 | 17 | 0 | 100% |
 | CommandHelpGenerator | 5 | 5 | 0 | 100% |
-| 表格工具 | 11 | 11 | 0 | 100% |
+| Table utilities | 11 | 11 | 0 | 100% |
 | Spinner | 5 | 5 | 0 | 100% |
-| 提示工具 | 13 | 13 | 0 | 100% |
-| mod 统一导出与类型 | 4 | 4 | 0 | 100% |
-| 边界情况 | 11 | 11 | 0 | 100% |
-| **总计** | **106** | **106** | **0** | **100%** |
+| Prompt utilities | 13 | 13 | 0 | 100% |
+| mod exports and types | 4 | 4 | 0 | 100% |
+| Edge cases | 11 | 11 | 0 | 100% |
+| **Total** | **106** | **106** | **0** | **100%** |
 
-### 按测试类型分类
+### By Test Type
 
-| 测试类型 | 数量 | 说明 |
-|---------|------|------|
-| 功能测试 | 90 | 验证各模块的核心功能（含 Spinner、原地进度条、交互式菜单、mod 导出、类型） |
-| 边界情况测试 | 11 | 验证边界条件和异常情况处理 |
+| Test Type | Count | Description |
+|-----------|-------|-------------|
+| Functional tests | 90 | Core module functionality (Spinner, in-place progress bar, interactive menus, mod exports, types) |
+| Edge case tests | 11 | Boundary conditions and exception handling |
 
-## 跨运行时兼容性测试
+## Cross-Runtime Compatibility
 
-### Deno 环境
+### Deno
 
-- ✅ 所有 API 在 Deno 2.6.4 下正常工作
-- ✅ 使用 Deno 原生 API 实现
-- ✅ 权限要求：需要 `--allow-env` 权限运行测试（颜色检测需要访问环境变量）
+- ✅ All APIs work under Deno 2.6.4
+- ✅ Uses Deno native APIs
+- ✅ Requires `--allow-env` for tests (color detection needs env vars)
 
-### Bun 环境
+### Bun
 
-- ✅ 所有 API 在 Bun 1.3.5 下正常工作
-- ✅ 使用 Node.js 兼容 API 实现
-- ✅ 无需特殊权限配置
-- ✅ 所有测试用例通过，无失败
+- ✅ All APIs work under Bun 1.3.5
+- ✅ Uses Node.js-compatible APIs
+- ✅ No special permission config
+- ✅ All tests pass, no failures
 
-## 测试质量评估
+## Test Quality Assessment
 
-### 优点
+### Strengths
 
-1. **全面覆盖**: 所有核心模块都有对应的测试用例
-2. **边界测试**: 包含边界情况和异常处理测试
-3. **新增测试**: 补充了 CommandParser 和 CommandHelpGenerator 的测试
-4. **执行功能测试**: 新增了 Command 类的执行功能测试
-5. **100% 通过率**: 所有测试用例均通过
+1. **Full coverage**: All core modules have tests
+2. **Edge tests**: Boundary and exception handling tests included
+3. **New tests**: CommandParser and CommandHelpGenerator tests added
+4. **Execution tests**: Command class execution flow tests added
+5. **100% pass rate**: All tests pass
 
-### 测试改进
+### Test Improvements
 
-1. **修复了等号选项解析问题**:
-   - 修复了 `--port=8080` 格式的选项解析
-   - 现在会正确分离选项名和值
+1. **Fixed equals-option parsing**:
+   - Fixed parsing of `--port=8080` format
+   - Correctly separates option name and value
 
-2. **避免测试时退出进程**:
-   - 使用 `keepAlive()` 防止测试时调用 `exit()`
-   - 确保测试可以完整运行
+2. **Avoid process exit during tests**:
+   - Use `keepAlive()` to prevent `exit()` during tests
+   - Ensures tests run to completion
 
-3. **新增测试覆盖**:
-   - CommandParser 的所有方法都有测试
-   - CommandHelpGenerator 的核心方法有测试
-   - Command 的执行流程有完整测试
+3. **New test coverage**:
+   - All CommandParser methods tested
+   - CommandHelpGenerator core methods tested
+   - Command execution flow fully tested
 
-4. **子命令别名功能测试**（2026-02-03）:
-   - 子命令通过 `alias()` 注册别名后正确路由
-   - 子命令 `alias()` 支持多个别名
-   - 子命令 `alias()` 与 `subcommandAlias()` 共存
-   - 帮助输出包含子命令别名（通过子进程验证 `generate (g)`、`migrate (m)` 显示）
+4. **Subcommand alias tests** (2026-02-03):
+   - Subcommand aliases via `alias()` route correctly
+   - Subcommand `alias()` supports multiple aliases
+   - Subcommand `alias()` coexists with `subcommandAlias()`
+   - Help output includes subcommand aliases (verified via subprocess: `generate (g)`, `migrate (m)`)
 
-## 已知限制
+## Known Limitations
 
-1. **交互式功能**: prompt 模块的交互式功能难以在自动化测试中完全验证，主要验证函数接口存在性
-2. **环境依赖**: 部分测试需要 `--allow-env` 权限来访问环境变量（颜色检测功能）
+1. **Interactive features**: Prompt module interactive features are hard to fully verify in automated tests; mainly validates function interface existence
+2. **Environment dependency**: Some tests need `--allow-env` to access env vars (color detection)
 
-## 测试覆盖分析
+## Coverage Analysis
 
-### 代码覆盖率
+### Code Coverage
 
-- **功能覆盖**: 100%
-- **API 覆盖**: 100%
-- **边界情况**: 已覆盖
-- **错误处理**: 已覆盖
+- **Functional coverage**: 100%
+- **API coverage**: 100%
+- **Edge cases**: Covered
+- **Error handling**: Covered
 
-### 测试质量
+### Test Quality
 
-- ✅ 所有公共 API 都有测试
-- ✅ 错误处理已测试
-- ✅ 边界情况已测试
-- ✅ 跨运行时兼容性已验证
-- ✅ 参数解析和验证已测试
+- ✅ All public APIs tested
+- ✅ Error handling tested
+- ✅ Edge cases tested
+- ✅ Cross-runtime compatibility verified
+- ✅ Argument parsing and validation tested
 
-## 结论
+## Conclusion
 
-### ✅ 测试通过率: 100%
+### ✅ Pass Rate: 100%
 
-所有 106 个测试用例全部通过，包括：
+All 106 tests pass, including:
 
-1. **核心功能**: ANSI 颜色、输出工具、命令封装、参数解析
-2. **高级功能**: 选项验证、冲突检测、依赖关系、帮助生成、子命令别名
-3. **工具功能**: 表格显示、进度条、原地进度条、Spinner、用户交互（含 interactiveMenu/Multi/Search）
-4. **导出与类型**: mod 统一导出、CommandOption/CommandArgument 等类型
-5. **边界情况**: 空值处理、长文本、特殊字符、边界值
+1. **Core features**: ANSI colors, output utilities, command wrapper, argument parsing
+2. **Advanced features**: Option validation, conflict detection, dependencies, help generation, subcommand aliases
+3. **Utilities**: Table display, progress bar, in-place progress bar, Spinner, user interaction (interactiveMenu/Multi/Search)
+4. **Exports and types**: mod unified exports, CommandOption/CommandArgument types
+5. **Edge cases**: Empty values, long text, special chars, boundary values
 
-### 质量保证
+### Quality Assurance
 
-- ✅ **功能完整性**: 所有 API 功能正常
-- ✅ **跨运行时兼容**: Deno 和 Bun 环境都正常工作
-- ✅ **参数解析**: 支持多种选项格式，自动类型转换
-- ✅ **错误处理**: 完善的错误处理和验证
-- ✅ **文档完善**: README.md 包含详细的使用示例
+- ✅ **Feature completeness**: All APIs work
+- ✅ **Cross-runtime**: Works in Deno and Bun
+- ✅ **Argument parsing**: Multiple option formats, auto type conversion
+- ✅ **Error handling**: Solid error handling and validation
+- ✅ **Documentation**: README.md has detailed examples
 
-### 改进建议
+### Recommendations
 
-1. **持续集成**: 建议在 CI/CD 中同时运行 Deno 和 Bun 测试
-2. **性能监控**: 定期检查测试执行时间，确保性能稳定
-3. **功能扩展**: 根据实际使用需求，继续扩展功能
-4. **交互式测试**: 考虑添加交互式功能的集成测试
+1. **CI**: Run both Deno and Bun tests in CI/CD
+2. **Performance**: Monitor test execution time
+3. **Features**: Extend based on usage
+4. **Interactive tests**: Consider integration tests for interactive features
 
 ---
 
-**测试报告生成时间**: 2026-02-03
-**测试框架**: @dreamer/test@^1.0.0-beta.40（兼容 Deno 和 Bun）
-**测试环境**: Bun / Deno（deno test -A tests）
-**测试总数**: 106
-**通过率**: 100% ✅
+**Report generated**: 2026-02-03
+**Test framework**: @dreamer/test@^1.0.0-beta.40 (Deno and Bun compatible)
+**Test environment**: Bun / Deno (deno test -A tests)
+**Total tests**: 106
+**Pass rate**: 100% ✅
