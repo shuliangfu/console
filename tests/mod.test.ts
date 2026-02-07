@@ -475,15 +475,18 @@ describe("Console", () => {
   });
 
   describe("prompt 子进程测试", () => {
-    const scriptPath = new URL("./prompt-script.ts", import.meta.url).pathname;
+    // Deno 用 file URL 兼容 Windows 路径；Bun 用 pathname
+    const scriptArg = IS_DENO
+      ? new URL("./prompt-script.ts", import.meta.url).href
+      : new URL("./prompt-script.ts", import.meta.url).pathname;
 
     async function runPromptScript(
       caseName: string,
       stdin: string,
     ): Promise<{ stdout: string; stderr: string; success: boolean }> {
       const runArgs = IS_DENO
-        ? ["run", "-A", "--no-prompt", scriptPath, caseName]
-        : ["run", scriptPath, caseName];
+        ? ["run", "-A", "--no-prompt", scriptArg, caseName]
+        : ["run", scriptArg, caseName];
       const baseEnv = { ...getEnvAll(), NO_COLOR: "1" };
       const cmd = createCommand(execPath(), {
         args: runArgs,
@@ -663,10 +666,12 @@ describe("Console", () => {
       platform() !== "windows",
       "Windows: shouldUseColor 应跳过 Linux Docker 检测",
       async () => {
-        const scriptPath = new URL("./ansi-script.ts", import.meta.url).pathname;
+        const scriptArg = IS_DENO
+          ? new URL("./ansi-script.ts", import.meta.url).href
+          : new URL("./ansi-script.ts", import.meta.url).pathname;
         const runArgs = IS_DENO
-          ? ["run", "-A", "--no-prompt", scriptPath]
-          : ["run", scriptPath];
+          ? ["run", "-A", "--no-prompt", scriptArg]
+          : ["run", scriptArg];
         const cmd = createCommand(execPath(), {
           args: runArgs,
           stdout: "piped",
@@ -998,11 +1003,12 @@ describe("Console", () => {
 
     it("帮助输出应包含子命令别名（如 generate (g)）", async () => {
       // 通过子进程运行帮助脚本，避免 showHelp 中的 exit(0) 终止测试
-      const scriptPath = new URL("./help-output-script.ts", import.meta.url)
-        .pathname;
+      const scriptArg = IS_DENO
+        ? new URL("./help-output-script.ts", import.meta.url).href
+        : new URL("./help-output-script.ts", import.meta.url).pathname;
       const runArgs = IS_DENO
-        ? ["run", "-A", "--no-prompt", scriptPath]
-        : ["run", scriptPath];
+        ? ["run", "-A", "--no-prompt", scriptArg]
+        : ["run", scriptArg];
       const helpEnv = { ...getEnvAll(), NO_COLOR: "1" };
       const cmd = createCommand(execPath(), {
         args: runArgs,
@@ -1165,11 +1171,16 @@ describe("Console", () => {
   });
 
   describe("ANSI 环境变量", () => {
+    const getAnsiScriptArg = () =>
+      IS_DENO
+        ? new URL("./ansi-script.ts", import.meta.url).href
+        : new URL("./ansi-script.ts", import.meta.url).pathname;
+
     it("NO_COLOR 时应禁用颜色", async () => {
-      const scriptPath = new URL("./ansi-script.ts", import.meta.url).pathname;
+      const scriptArg = getAnsiScriptArg();
       const runArgs = IS_DENO
-        ? ["run", "-A", "--no-prompt", scriptPath]
-        : ["run", scriptPath];
+        ? ["run", "-A", "--no-prompt", scriptArg]
+        : ["run", scriptArg];
       const cmd = createCommand(execPath(), {
         args: runArgs,
         stdout: "piped",
@@ -1182,10 +1193,10 @@ describe("Console", () => {
     });
 
     it("DWEB_NO_COLOR 时应禁用颜色", async () => {
-      const scriptPath = new URL("./ansi-script.ts", import.meta.url).pathname;
+      const scriptArg = getAnsiScriptArg();
       const runArgs = IS_DENO
-        ? ["run", "-A", "--no-prompt", scriptPath]
-        : ["run", scriptPath];
+        ? ["run", "-A", "--no-prompt", scriptArg]
+        : ["run", scriptArg];
       const cmd = createCommand(execPath(), {
         args: runArgs,
         stdout: "piped",
@@ -1198,10 +1209,10 @@ describe("Console", () => {
     });
 
     it("TERM=dumb 时应禁用颜色", async () => {
-      const scriptPath = new URL("./ansi-script.ts", import.meta.url).pathname;
+      const scriptArg = getAnsiScriptArg();
       const runArgs = IS_DENO
-        ? ["run", "-A", "--no-prompt", scriptPath]
-        : ["run", scriptPath];
+        ? ["run", "-A", "--no-prompt", scriptArg]
+        : ["run", scriptArg];
       const cmd = createCommand(execPath(), {
         args: runArgs,
         stdout: "piped",
