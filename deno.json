@@ -37,7 +37,7 @@
   },
   "imports": {
     "@dreamer/test": "jsr:@dreamer/test@^1.0.0",
-    "@dreamer/runtime-adapter": "jsr:@dreamer/runtime-adapter@^1.0.2"
+    "@dreamer/runtime-adapter": "jsr:@dreamer/runtime-adapter@^1.0.3"
   },
   "nodeModulesDir": "auto"
 }
