@@ -18,6 +18,54 @@ function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
 
+/**
+ * 解析方向键转义序列（兼容 Windows 与 Linux/macOS）
+ * - ANSI: ESC [ A (上) / ESC [ B (下)
+ * - 应用模式（Windows Terminal 等）: ESC O A (上) / ESC O B (下)
+ * @param bytes 已读取的字节
+ * @param n 读取长度
+ * @returns "up" | "down" | "esc" | null
+ */
+export function parseArrowKey(bytes: Uint8Array, n: number): "up" | "down" | "esc" | null {
+  if (n < 1 || bytes[0] !== 0x1b) return null;
+  if (n >= 3) {
+    if (bytes[1] === 0x5b) {
+      if (bytes[2] === 0x41) return "up";
+      if (bytes[2] === 0x42) return "down";
+    }
+    if (bytes[1] === 0x4f) {
+      if (bytes[2] === 0x41) return "up";
+      if (bytes[2] === 0x42) return "down";
+    }
+  }
+  if (n === 1) return "esc";
+  return null;
+}
+
+/**
+ * 读取转义序列续字节（当首字节为 0x1b 且未读够 3 字节时）
+ * 兼容分片到达：可能先收到 0x1b，再收到 0x5b 0x41 或 0x4f 0x41
+ * @param alreadyRead 已读字节（如 [0x1b] 或 [0x1b, 0x5b]）
+ * @returns "up" | "down" | "esc" | null
+ */
+async function readEscSequence(alreadyRead: Uint8Array): Promise<"up" | "down" | "esc" | null> {
+  const need = 3 - alreadyRead.length;
+  if (need <= 0) return parseArrowKey(alreadyRead, alreadyRead.length);
+  const buf2 = new Uint8Array(5);
+  const n2 = await Promise.race([
+    readStdin(buf2),
+    sleep(50).then(() => null),
+  ]);
+  if (n2 !== null && n2 >= need) {
+    const combined = new Uint8Array(alreadyRead.length + n2);
+    combined.set(alreadyRead);
+    combined.set(buf2.subarray(0, n2), alreadyRead.length);
+    const arrow = parseArrowKey(combined, combined.length);
+    if (arrow) return arrow;
+  }
+  return "esc";
+}
+
 /** prompt 可选配置（默认值、超时） */
 export interface PromptOptions {
   /** 空回车时返回的默认值 */
@@ -95,8 +143,14 @@ async function readLineRaw(): Promise<string | null> {
 }
 
 /**
+ * 非 TTY 模式下 stdin 行缓冲（同一次 read 可能收到多行如 "a\nb\n"，需保留剩余部分）
+ */
+let _stdinLineBuffer: number[] = [];
+
+/**
  * 读取一行输入（读到 \r 或 \n 为止，兼容不同终端的回车）
  * 当 stdin 为 TTY 时使用原始模式，与 deno run / ./script 行为一致
+ * 非 TTY 时支持同一次 read 收到多行的情况，将剩余字节保留供下次 readLine 使用
  * @returns 输入的内容
  */
 async function readLine(): Promise<string | null> {
@@ -104,25 +158,33 @@ async function readLine(): Promise<string | null> {
     return await readLineRaw();
   }
   const decoder = new TextDecoder();
-  const parts: number[] = [];
-  const buf = new Uint8Array(256);
+  const parts: number[] = [..._stdinLineBuffer];
+  _stdinLineBuffer = [];
+
+  const flushLine = (): string | null => {
+    const line = decoder.decode(new Uint8Array(parts)).trim();
+    return line || null;
+  };
+
   while (true) {
+    // 检查 buffer 中是否已有完整行
+    const newlineIdx = parts.findIndex((b) => b === 0x0d || b === 0x0a);
+    if (newlineIdx >= 0) {
+      const lineBytes = parts.splice(0, newlineIdx);
+      const skip = (parts[0] === 0x0d && parts[1] === 0x0a) ? 2 : 1;
+      parts.splice(0, skip);
+      _stdinLineBuffer = parts;
+      return decoder.decode(new Uint8Array(lineBytes)).trim() || null;
+    }
+
+    const buf = new Uint8Array(256);
     const n = await readStdin(buf);
     if (n === null || n === 0) {
       if (parts.length === 0) return null;
-      break;
+      return flushLine();
     }
-    for (let i = 0; i < n; i++) {
-      const b = buf[i];
-      if (b === 0x0d || b === 0x0a) {
-        const line = decoder.decode(new Uint8Array(parts)).trim();
-        return line || null;
-      }
-      parts.push(b);
-    }
+    for (let i = 0; i < n; i++) parts.push(buf[i]);
   }
-  const line = decoder.decode(new Uint8Array(parts)).trim();
-  return line || null;
 }
 
 /**
@@ -600,13 +662,15 @@ export async function interactiveMenu(
     );
   };
 
-  // 尝试使用原始模式
+  // 尝试使用原始模式（Windows 下 setStdinRaw 可能失败，此时回退到数字选择）
   try {
+    const isRaw = setStdinRaw(true, { cbreak: true });
+    if (!isRaw) {
+      return await select(message, options, defaultValue);
+    }
+
     // 隐藏光标
     writeStdoutSync(encoder.encode("\x1b[?25l"));
-
-    // 启用原始模式
-    const isRaw = setStdinRaw(true, { cbreak: true });
 
     renderMenu();
 
@@ -621,50 +685,26 @@ export async function interactiveMenu(
       const bytes = buf.subarray(0, n);
       const input = decoder.decode(bytes);
 
-      // 处理方向键（ANSI 转义序列）
-      // 上箭头: \x1b[A 或 \x1bOA；下箭头: \x1b[B 或 \x1bOB
-      // 若只读到 \x1b（分片），短时等待后续字节，避免误判为 Esc
+      // 处理方向键（ANSI 与 Windows 应用模式）
+      // 上: ESC [ A 或 ESC O A；下: ESC [ B 或 ESC O B
       if (bytes[0] === 0x1b) {
-        if (n >= 3 && bytes[1] === 0x5b) {
-          if (bytes[2] === 0x41) {
-            selectedIndex = selectedIndex > 0
-              ? selectedIndex - 1
-              : options.length - 1;
-            writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
-            renderMenu();
-          } else if (bytes[2] === 0x42) {
-            selectedIndex = selectedIndex < options.length - 1
-              ? selectedIndex + 1
-              : 0;
-            writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
-            renderMenu();
-          }
-        } else if (n === 1) {
-          const buf2 = new Uint8Array(5);
-          const n2 = await Promise.race([
-            readStdin(buf2),
-            sleep(25).then(() => null),
-          ]);
-          if (n2 !== null && n2 >= 2 && buf2[0] === 0x5b) {
-            if (buf2[1] === 0x41) {
-              selectedIndex = selectedIndex > 0
-                ? selectedIndex - 1
-                : options.length - 1;
-              writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
-              renderMenu();
-            } else if (buf2[1] === 0x42) {
-              selectedIndex = selectedIndex < options.length - 1
-                ? selectedIndex + 1
-                : 0;
-              writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
-              renderMenu();
-            }
-          } else {
-            writeStdoutSync(encoder.encode("\x1b[?25h"));
-            if (isRaw) setStdinRaw(false);
-            exit(0);
-          }
-        } else {
+        let arrow: "up" | "down" | "esc" | null = parseArrowKey(bytes, n);
+        if (arrow === null && n < 3) {
+          arrow = await readEscSequence(bytes.subarray(0, n));
+        }
+        if (arrow === "up") {
+          selectedIndex = selectedIndex > 0
+            ? selectedIndex - 1
+            : options.length - 1;
+          writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
+          renderMenu();
+        } else if (arrow === "down") {
+          selectedIndex = selectedIndex < options.length - 1
+            ? selectedIndex + 1
+            : 0;
+          writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
+          renderMenu();
+        } else if (arrow === "esc") {
           writeStdoutSync(encoder.encode("\x1b[?25h"));
           if (isRaw) setStdinRaw(false);
           exit(0);
@@ -672,10 +712,25 @@ export async function interactiveMenu(
         continue;
       }
 
-      if (
-        input === "\r" || input === "\n" || bytes[0] === 0x0d ||
-        bytes[0] === 0x0a
-      ) {
+      // 检测 Enter（含多字节如 "1\r\n" 时，取数字键并确认）
+      let hasEnter = input === "\r" || input === "\n" ||
+        bytes[0] === 0x0d || bytes[0] === 0x0a;
+      let digitBeforeEnter = -1;
+      if (!hasEnter) {
+        for (let i = 0; i < n; i++) {
+          if (bytes[i] === 0x0d || bytes[i] === 0x0a) {
+            hasEnter = true;
+            break;
+          }
+          if (digitBeforeEnter === -1 && bytes[i] >= 0x31 && bytes[i] <= 0x39) {
+            digitBeforeEnter = bytes[i] - 0x30;
+          }
+        }
+      }
+      if (hasEnter) {
+        if (digitBeforeEnter >= 1 && digitBeforeEnter <= options.length) {
+          selectedIndex = Math.min(digitBeforeEnter - 1, options.length - 1);
+        }
         break;
       }
       if (bytes[0] === 0x03) {
@@ -753,8 +808,12 @@ export async function interactiveMultiMenu(
   };
 
   try {
-    writeStdoutSync(encoder.encode("\x1b[?25l"));
     const isRaw = setStdinRaw(true, { cbreak: true });
+    if (!isRaw) {
+      return await multiSelect(message, options, min, max);
+    }
+
+    writeStdoutSync(encoder.encode("\x1b[?25l"));
     renderMenu();
 
     while (true) {
@@ -764,38 +823,19 @@ export async function interactiveMultiMenu(
       const bytes = buf.subarray(0, n);
 
       if (bytes[0] === 0x1b) {
-        if (n >= 3 && bytes[1] === 0x5b) {
-          if (bytes[2] === 0x41) {
-            cursor = cursor > 0 ? cursor - 1 : options.length - 1;
-            writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
-            renderMenu();
-          } else if (bytes[2] === 0x42) {
-            cursor = cursor < options.length - 1 ? cursor + 1 : 0;
-            writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
-            renderMenu();
-          }
-        } else if (n === 1) {
-          const buf2 = new Uint8Array(5);
-          const n2 = await Promise.race([
-            readStdin(buf2),
-            sleep(25).then(() => null),
-          ]);
-          if (n2 !== null && n2 >= 2 && buf2[0] === 0x5b) {
-            if (buf2[1] === 0x41) {
-              cursor = cursor > 0 ? cursor - 1 : options.length - 1;
-              writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
-              renderMenu();
-            } else if (buf2[1] === 0x42) {
-              cursor = cursor < options.length - 1 ? cursor + 1 : 0;
-              writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
-              renderMenu();
-            }
-          } else {
-            writeStdoutSync(encoder.encode("\x1b[?25h"));
-            if (isRaw) setStdinRaw(false);
-            exit(0);
-          }
-        } else {
+        let arrow: "up" | "down" | "esc" | null = parseArrowKey(bytes, n);
+        if (arrow === null && n < 3) {
+          arrow = await readEscSequence(bytes.subarray(0, n));
+        }
+        if (arrow === "up") {
+          cursor = cursor > 0 ? cursor - 1 : options.length - 1;
+          writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
+          renderMenu();
+        } else if (arrow === "down") {
+          cursor = cursor < options.length - 1 ? cursor + 1 : 0;
+          writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
+          renderMenu();
+        } else if (arrow === "esc") {
           writeStdoutSync(encoder.encode("\x1b[?25h"));
           if (isRaw) setStdinRaw(false);
           exit(0);
@@ -815,7 +855,15 @@ export async function interactiveMultiMenu(
         continue;
       }
 
-      if (bytes[0] === 0x0d || bytes[0] === 0x0a) {
+      // 检测 Enter（含多字节如 "1\r\n"）
+      let hasEnterMulti = false;
+      for (let i = 0; i < n; i++) {
+        if (bytes[i] === 0x0d || bytes[i] === 0x0a) {
+          hasEnterMulti = true;
+          break;
+        }
+      }
+      if (hasEnterMulti) {
         const arr = [...selected].sort((a, b) => a - b);
         if (arr.length < min) continue;
         writeStdoutSync(encoder.encode("\x1b[?25h"));
@@ -897,8 +945,12 @@ export async function interactiveMenuSearch(
   };
 
   try {
-    writeStdoutSync(encoder.encode("\x1b[?25l"));
     const isRaw = setStdinRaw(true, { cbreak: true });
+    if (!isRaw) {
+      return await select(message, options, defaultValue);
+    }
+
+    writeStdoutSync(encoder.encode("\x1b[?25l"));
     filterOptions();
     renderMenu();
 
@@ -909,58 +961,29 @@ export async function interactiveMenuSearch(
       const bytes = buf.subarray(0, n);
 
       if (bytes[0] === 0x1b) {
-        if (n >= 3 && bytes[1] === 0x5b) {
-          if (bytes[2] === 0x41) {
-            if (filteredIndices.length > 0) {
-              const idx = filteredIndices.indexOf(selectedIndex);
-              selectedIndex = idx <= 0
-                ? filteredIndices[filteredIndices.length - 1]
-                : filteredIndices[idx - 1];
-            }
-            writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
-            renderMenu();
-          } else if (bytes[2] === 0x42) {
-            if (filteredIndices.length > 0) {
-              const idx = filteredIndices.indexOf(selectedIndex);
-              selectedIndex = idx < 0 || idx >= filteredIndices.length - 1
-                ? filteredIndices[0]
-                : filteredIndices[idx + 1];
-            }
-            writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
-            renderMenu();
+        let arrow: "up" | "down" | "esc" | null = parseArrowKey(bytes, n);
+        if (arrow === null && n < 3) {
+          arrow = await readEscSequence(bytes.subarray(0, n));
+        }
+        if (arrow === "up") {
+          if (filteredIndices.length > 0) {
+            const idx = filteredIndices.indexOf(selectedIndex);
+            selectedIndex = idx <= 0
+              ? filteredIndices[filteredIndices.length - 1]
+              : filteredIndices[idx - 1];
           }
-        } else if (n === 1) {
-          const buf2 = new Uint8Array(5);
-          const n2 = await Promise.race([
-            readStdin(buf2),
-            sleep(25).then(() => null),
-          ]);
-          if (n2 !== null && n2 >= 2 && buf2[0] === 0x5b) {
-            if (buf2[1] === 0x41) {
-              if (filteredIndices.length > 0) {
-                const idx = filteredIndices.indexOf(selectedIndex);
-                selectedIndex = idx <= 0
-                  ? filteredIndices[filteredIndices.length - 1]
-                  : filteredIndices[idx - 1];
-              }
-              writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
-              renderMenu();
-            } else if (buf2[1] === 0x42) {
-              if (filteredIndices.length > 0) {
-                const idx = filteredIndices.indexOf(selectedIndex);
-                selectedIndex = idx < 0 || idx >= filteredIndices.length - 1
-                  ? filteredIndices[0]
-                  : filteredIndices[idx + 1];
-              }
-              writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
-              renderMenu();
-            }
-          } else {
-            writeStdoutSync(encoder.encode("\x1b[?25h"));
-            if (isRaw) setStdinRaw(false);
-            exit(0);
+          writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
+          renderMenu();
+        } else if (arrow === "down") {
+          if (filteredIndices.length > 0) {
+            const idx = filteredIndices.indexOf(selectedIndex);
+            selectedIndex = idx < 0 || idx >= filteredIndices.length - 1
+              ? filteredIndices[0]
+              : filteredIndices[idx + 1];
           }
-        } else {
+          writeStdoutSync(encoder.encode("\x1b[2J\x1b[H"));
+          renderMenu();
+        } else if (arrow === "esc") {
           writeStdoutSync(encoder.encode("\x1b[?25h"));
           if (isRaw) setStdinRaw(false);
           exit(0);
@@ -968,7 +991,15 @@ export async function interactiveMenuSearch(
         continue;
       }
 
-      if (bytes[0] === 0x0d || bytes[0] === 0x0a) {
+      // 检测 Enter（含多字节如 "a\r\n"）
+      let hasEnterSearch = false;
+      for (let i = 0; i < n; i++) {
+        if (bytes[i] === 0x0d || bytes[i] === 0x0a) {
+          hasEnterSearch = true;
+          break;
+        }
+      }
+      if (hasEnterSearch) {
         if (filteredIndices.length > 0 && selectedIndex >= 0) {
           writeStdoutSync(encoder.encode("\x1b[?25h"));
           if (isRaw) setStdinRaw(false);

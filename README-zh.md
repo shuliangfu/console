@@ -6,7 +6,7 @@
 
 [![JSR](https://jsr.io/badges/@dreamer/console)](https://jsr.io/@dreamer/console)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE.md)
-[![Tests](https://img.shields.io/badge/tests-106%20passed-brightgreen)](./TEST_REPORT.md)
+[![Tests](https://img.shields.io/badge/tests-140%20passed%20%7C%201%20skip-brightgreen)](./TEST_REPORT.md)
 
 ---
 
@@ -608,10 +608,21 @@ bun test tests/mod.test.ts
 详细的测试报告请查看 [TEST_REPORT.md](./TEST_REPORT.md)。
 
 测试覆盖包括：
-- ✅ 101 个测试用例全部通过
-- ✅ 8 个功能模块完整测试（含 Spinner、mod 统一导出与类型）
+- ✅ 141 个测试用例（140 通过，1 跳过）
+- ✅ 功能模块：ANSI 颜色、输出、Command、解析器、帮助、表格、Spinner、prompt（含子进程测试）
+- ✅ parseArrowKey（Windows 兼容）、ANSI 环境变量（NO_COLOR、DWEB_NO_COLOR、TERM=dumb）
 - ✅ Deno 和 Bun 跨运行时兼容性验证
 - ✅ 边界情况和错误处理测试
+
+---
+
+## 📋 变更日志
+
+### [1.0.4] - 2025-02-07
+
+**新增**：CHANGELOG-zh.md、README 变更日志章节。**变更**：runtime-adapter ^1.0.2、TEST_REPORT（141 测试）、README 测试徽章。
+
+完整历史详见 [CHANGELOG-zh.md](./CHANGELOG-zh.md)。
 
 ---
 

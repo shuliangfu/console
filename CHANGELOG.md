@@ -1,10 +1,33 @@
 # Changelog
 
+English | [中文 (Chinese)](./CHANGELOG-zh.md)
+
 All notable changes to @dreamer/console are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+---
+
+## [1.0.4] - 2025-02-07
+
+### Added
+
+- **CHANGELOG-zh.md**: Chinese changelog
+- **README changelog section**: Changelog summary in README.md and README-zh.md
+
+### Changed
+
+- **@dreamer/runtime-adapter**: Bump to ^1.0.2 for Bun createCommand stdin compatibility
+- **TEST_REPORT.md**: Update to 141 tests (140 passed, 1 skipped)
+- **README**: Update test report badges and coverage summary
+
+### Compatibility
+
+- Deno 2.5.0+
+- Bun 1.0.0+
+- Requires TTY for interactive features
 
 ---
 

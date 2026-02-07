@@ -8,6 +8,7 @@ import {
   getEnv,
   isStderrTerminal,
   isTerminal,
+  platform,
   readTextFileSync,
 } from "@dreamer/runtime-adapter";
 
@@ -43,38 +44,54 @@ export function shouldUseColor(): boolean {
   }
 
   // 4. 检查是否在 Docker 容器中运行
+  // Windows 下跳过 Linux 专用路径（/.dockerenv、/proc/* 不存在），仅检查环境变量
   // 多种检测方式确保能正确识别 Docker 环境
-  // 注意：在 Docker 中使用 tee 时，stdout 仍然是 TTY，所以必须依赖容器检测
-  // 注意：由于 shouldUseColor() 必须是同步函数，这里使用同步 API
-  // 使用 runtime-adapter 的运行时检测常量（IS_DENO, IS_BUN）来适配不同运行时
   try {
-    // 方式1: 检查 .dockerenv 文件（Docker 容器的标志文件）
-    try {
-      if (existsSync("/.dockerenv")) {
-        return false;
+    const isWindows = platform() === "windows";
+
+    if (!isWindows) {
+      // 方式1: 检查 .dockerenv 文件（Docker 容器的标志文件，仅 Linux）
+      try {
+        if (existsSync("/.dockerenv")) {
+          return false;
+        }
+      } catch {
+        // 文件不存在，继续检查
       }
-    } catch {
-      // 文件不存在，继续检查
+
+      // 方式2: 检查 /proc/1/cgroup 是否包含 docker 或 containerd（仅 Linux）
+      try {
+        const cgroupContent = readTextFileSync("/proc/1/cgroup");
+        if (
+          cgroupContent.includes("docker") ||
+          cgroupContent.includes("containerd") ||
+          cgroupContent.includes("kubepods") ||
+          cgroupContent.includes("/docker/") ||
+          cgroupContent.includes("/containerd/")
+        ) {
+          return false;
+        }
+      } catch {
+        // 文件不存在或读取失败，继续检查
+      }
+
+      // 方式4: 检查 /proc/self/mountinfo 是否包含 docker（仅 Linux）
+      try {
+        const mountInfo = readTextFileSync("/proc/self/mountinfo");
+        if (
+          mountInfo.includes("docker") ||
+          mountInfo.includes("containerd") ||
+          mountInfo.includes("/docker/") ||
+          mountInfo.includes("/containerd/")
+        ) {
+          return false;
+        }
+      } catch {
+        // 文件不存在或读取失败，继续检查
+      }
     }
 
-    // 方式2: 检查 /proc/1/cgroup 是否包含 docker 或 containerd
-    try {
-      const cgroupContent = readTextFileSync("/proc/1/cgroup");
-      if (
-        cgroupContent.includes("docker") ||
-        cgroupContent.includes("containerd") ||
-        cgroupContent.includes("kubepods") ||
-        cgroupContent.includes("/docker/") ||
-        cgroupContent.includes("/containerd/")
-      ) {
-        return false;
-      }
-    } catch {
-      // 文件不存在或读取失败，继续检查
-    }
-
-    // 方式3: 检查环境变量（某些容器运行时会设置）
-    // 使用 runtime-adapter 的 getEnv 函数
+    // 方式3: 检查环境变量（跨平台，Windows 与 Linux 均适用）
     const containerEnv = getEnv("container");
     if (
       containerEnv === "docker" ||
@@ -82,21 +99,6 @@ export function shouldUseColor(): boolean {
       containerEnv !== undefined // 如果设置了 container 环境变量（通常是容器环境）
     ) {
       return false;
-    }
-
-    // 方式4: 检查 /proc/self/mountinfo 是否包含 docker
-    try {
-      const mountInfo = readTextFileSync("/proc/self/mountinfo");
-      if (
-        mountInfo.includes("docker") ||
-        mountInfo.includes("containerd") ||
-        mountInfo.includes("/docker/") ||
-        mountInfo.includes("/containerd/")
-      ) {
-        return false;
-      }
-    } catch {
-      // 文件不存在或读取失败，继续检查
     }
   } catch {
     // 忽略错误，继续检查

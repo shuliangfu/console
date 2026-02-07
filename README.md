@@ -6,7 +6,7 @@ English | [中文 (Chinese)](./README-zh.md)
 
 [![JSR](https://jsr.io/badges/@dreamer/console)](https://jsr.io/@dreamer/console)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE.md)
-[![Tests](https://img.shields.io/badge/tests-106%20passed-brightgreen)](./TEST_REPORT.md)
+[![Tests](https://img.shields.io/badge/tests-140%20passed%20%7C%201%20skip-brightgreen)](./TEST_REPORT.md)
 
 ---
 
@@ -608,10 +608,21 @@ bun test tests/mod.test.ts
 See [TEST_REPORT.md](./TEST_REPORT.md) for details.
 
 Coverage:
-- ✅ 106 tests all passed
-- ✅ 8 feature modules (Spinner, mod exports, types)
+- ✅ 141 tests (140 passed, 1 skipped)
+- ✅ Feature modules: ANSI colors, output, Command, parser, help, table, Spinner, prompt (incl. subprocess tests)
+- ✅ parseArrowKey (Windows compatible), ANSI env vars (NO_COLOR, DWEB_NO_COLOR, TERM=dumb)
 - ✅ Deno and Bun cross-runtime
 - ✅ Edge cases and error handling
+
+---
+
+## 📋 Changelog
+
+### [1.0.4] - 2025-02-07
+
+**Added**: CHANGELOG-zh.md, README changelog section. **Changed**: runtime-adapter ^1.0.2, TEST_REPORT (141 tests), README test badges.
+
+See [CHANGELOG.md](./CHANGELOG.md) for full history.
 
 ---
 

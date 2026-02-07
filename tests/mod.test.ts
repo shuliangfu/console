@@ -2,6 +2,14 @@
  * @fileoverview Console 测试
  */
 
+import {
+  createCommand,
+  execPath,
+  getEnvAll,
+  IS_BUN,
+  IS_DENO,
+  platform,
+} from "@dreamer/runtime-adapter";
 import { describe, expect, it } from "@dreamer/test";
 import {
   clearLine,
@@ -43,6 +51,7 @@ import {
   interactiveMenuSearch,
   interactiveMultiMenu,
   multiSelect,
+  parseArrowKey,
   pause,
   prompt,
   select,
@@ -418,6 +427,260 @@ describe("Console", () => {
     });
   });
 
+  describe("parseArrowKey（方向键解析，Windows 兼容）", () => {
+    it("应解析 ANSI 上键 ESC [ A", () => {
+      const bytes = new Uint8Array([0x1b, 0x5b, 0x41]);
+      expect(parseArrowKey(bytes, 3)).toBe("up");
+    });
+
+    it("应解析 ANSI 下键 ESC [ B", () => {
+      const bytes = new Uint8Array([0x1b, 0x5b, 0x42]);
+      expect(parseArrowKey(bytes, 3)).toBe("down");
+    });
+
+    it("应解析 Windows 应用模式上键 ESC O A", () => {
+      const bytes = new Uint8Array([0x1b, 0x4f, 0x41]);
+      expect(parseArrowKey(bytes, 3)).toBe("up");
+    });
+
+    it("应解析 Windows 应用模式下键 ESC O B", () => {
+      const bytes = new Uint8Array([0x1b, 0x4f, 0x42]);
+      expect(parseArrowKey(bytes, 3)).toBe("down");
+    });
+
+    it("应解析单独 ESC 返回 esc", () => {
+      const bytes = new Uint8Array([0x1b]);
+      expect(parseArrowKey(bytes, 1)).toBe("esc");
+    });
+
+    it("应对非 ESC 首字节返回 null", () => {
+      const bytes = new Uint8Array([0x41, 0x1b, 0x5b]);
+      expect(parseArrowKey(bytes, 3)).toBe(null);
+    });
+
+    it("应对非方向键的 ESC 序列返回 null", () => {
+      const bytes = new Uint8Array([0x1b, 0x5b, 0x43]); // ESC [ C (右)
+      expect(parseArrowKey(bytes, 3)).toBe(null);
+    });
+
+    it("应对空或 n<1 返回 null", () => {
+      const bytes = new Uint8Array([0x1b]);
+      expect(parseArrowKey(bytes, 0)).toBe(null);
+    });
+
+    it("应对 n=2 且未完整序列返回 null（由 readEscSequence 续读）", () => {
+      const bytes = new Uint8Array([0x1b, 0x5b]);
+      expect(parseArrowKey(bytes, 2)).toBe(null);
+    });
+  });
+
+  describe("prompt 子进程测试", () => {
+    const scriptPath = new URL("./prompt-script.ts", import.meta.url).pathname;
+
+    async function runPromptScript(
+      caseName: string,
+      stdin: string,
+    ): Promise<{ stdout: string; stderr: string; success: boolean }> {
+      const runArgs = IS_DENO
+        ? ["run", "-A", "--no-prompt", scriptPath, caseName]
+        : ["run", scriptPath, caseName];
+      const baseEnv = { ...getEnvAll(), NO_COLOR: "1" };
+      const cmd = createCommand(execPath(), {
+        args: runArgs,
+        stdin: "piped",
+        stdout: "piped",
+        stderr: "piped",
+        env: baseEnv,
+      });
+      const proc = cmd.spawn();
+      if (proc.stdin) {
+        const writer = proc.stdin.getWriter();
+        await writer.write(new TextEncoder().encode(stdin));
+        await writer.close();
+      }
+      const stdoutBytes = proc.stdout
+        ? new Uint8Array(await new Response(proc.stdout).arrayBuffer())
+        : new Uint8Array(0);
+      const stderrBytes = proc.stderr
+        ? new Uint8Array(await new Response(proc.stderr).arrayBuffer())
+        : new Uint8Array(0);
+      const status = await proc.status;
+      return {
+        stdout: new TextDecoder().decode(stdoutBytes),
+        stderr: new TextDecoder().decode(stderrBytes),
+        success: status.success,
+      };
+    }
+
+    /** 从 stdout 提取 __PROMPT_RESULT__ 后的 JSON */
+    function parseResult(stdout: string): unknown {
+      const marker = "__PROMPT_RESULT__";
+      const idx = stdout.lastIndexOf(marker);
+      if (idx < 0) throw new Error(`No ${marker} in stdout`);
+      const json = stdout.slice(idx + marker.length).trim();
+      return JSON.parse(json);
+    }
+
+    it("select 应返回选项索引", async () => {
+      const { stdout, success } = await runPromptScript("select", "1\n");
+      expect(success).toBe(true);
+      expect(parseResult(stdout)).toBe(0);
+    });
+
+    it("select 应返回选项 2 的索引", async () => {
+      const { stdout, success } = await runPromptScript("select", "2\n");
+      expect(success).toBe(true);
+      expect(parseResult(stdout)).toBe(1);
+    });
+
+    it("select 应支持默认值（空回车）", async () => {
+      const { stdout, success } = await runPromptScript("select", "\n");
+      expect(success).toBe(true);
+      expect(parseResult(stdout)).toBe(0);
+    });
+
+    it("multiSelect 应返回多选索引数组", async () => {
+      const { stdout, success } = await runPromptScript(
+        "multiSelect",
+        "1,2\n",
+      );
+      expect(success).toBe(true);
+      expect(parseResult(stdout)).toEqual([0, 1]);
+    });
+
+    it("multiSelect 应支持 min=0 空选择", async () => {
+      const { stdout, success } = await runPromptScript(
+        "multiSelectMin0",
+        "\n",
+      );
+      expect(success).toBe(true);
+      expect(parseResult(stdout)).toEqual([]);
+    });
+
+    it("confirm 应解析 y 为 true", async () => {
+      const { stdout, success } = await runPromptScript("confirmY", "y\n");
+      expect(success).toBe(true);
+      expect(parseResult(stdout)).toBe(true);
+    });
+
+    it("confirm 应解析 n 为 false", async () => {
+      const { stdout, success } = await runPromptScript("confirmN", "n\n");
+      expect(success).toBe(true);
+      expect(parseResult(stdout)).toBe(false);
+    });
+
+    it("confirm 应支持默认值（空回车）", async () => {
+      const { stdout, success } = await runPromptScript("confirmDefault", "\n");
+      expect(success).toBe(true);
+      expect(parseResult(stdout)).toBe(true);
+    });
+
+    it("input 应返回用户输入", async () => {
+      const { stdout, success } = await runPromptScript("input", "hello\n");
+      expect(success).toBe(true);
+      expect(parseResult(stdout)).toBe("hello");
+    });
+
+    it("input 应支持默认值（空回车）", async () => {
+      const { stdout, success } = await runPromptScript(
+        "inputWithDefault",
+        "\n",
+      );
+      expect(success).toBe(true);
+      expect(parseResult(stdout)).toBe("default");
+    });
+
+    it("inputEmail 应校验邮箱格式", async () => {
+      const { stdout, success } = await runPromptScript(
+        "inputEmail",
+        "test@example.com\n",
+      );
+      expect(success).toBe(true);
+      expect(parseResult(stdout)).toBe("test@example.com");
+    });
+
+    it("inputNumber 应返回数字", async () => {
+      const { stdout, success } = await runPromptScript("inputNumber", "42\n");
+      expect(success).toBe(true);
+      expect(parseResult(stdout)).toBe(42);
+    });
+
+    it("inputUsername 应校验用户名格式", async () => {
+      const { stdout, success } = await runPromptScript(
+        "inputUsername",
+        "user123\n",
+      );
+      expect(success).toBe(true);
+      expect(parseResult(stdout)).toBe("user123");
+    });
+
+    it("input 应在校验失败后重试", async () => {
+      const { stdout, success } = await runPromptScript(
+        "inputValidatorRetry",
+        "bad\nok\n",
+      );
+      expect(success).toBe(true);
+      expect(parseResult(stdout)).toBe("ok");
+    });
+
+    it("select 应在无效输入后重试", async () => {
+      const { stdout, success } = await runPromptScript(
+        "selectInvalidThenValid",
+        "99\n1\n",
+      );
+      expect(success).toBe(true);
+      expect(parseResult(stdout)).toBe(0);
+    });
+
+    it("interactiveMenu 在管道 stdin 时应回退到 select（含 Windows）", async () => {
+      const { stdout, success } = await runPromptScript(
+        "interactiveMenuFallback",
+        "1\n",
+      );
+      expect(success).toBe(true);
+      expect(parseResult(stdout)).toBe(0);
+    });
+
+    it("readLine 应支持 \\r\\n 换行（Windows 行尾）", async () => {
+      const { stdout, success } = await runPromptScript(
+        "inputCRLF",
+        "hello\r\n",
+      );
+      expect(success).toBe(true);
+      expect(parseResult(stdout)).toBe("hello");
+    });
+  });
+
+  describe("Windows 平台相关", () => {
+    it("parseArrowKey 应支持 Windows 应用模式 ESC O A/B（跨平台验证）", () => {
+      const up = new Uint8Array([0x1b, 0x4f, 0x41]);
+      const down = new Uint8Array([0x1b, 0x4f, 0x42]);
+      expect(parseArrowKey(up, 3)).toBe("up");
+      expect(parseArrowKey(down, 3)).toBe("down");
+    });
+
+    it.skipIf(
+      platform() !== "windows",
+      "Windows: shouldUseColor 应跳过 Linux Docker 检测",
+      async () => {
+        const scriptPath = new URL("./ansi-script.ts", import.meta.url).pathname;
+        const runArgs = IS_DENO
+          ? ["run", "-A", "--no-prompt", scriptPath]
+          : ["run", scriptPath];
+        const cmd = createCommand(execPath(), {
+          args: runArgs,
+          stdout: "piped",
+          stderr: "piped",
+          env: { ...getEnvAll(), NO_COLOR: "", DWEB_NO_COLOR: "" },
+        });
+        const { stdout, success } = await cmd.output();
+        expect(success).toBe(true);
+        const result = new TextDecoder().decode(stdout).trim();
+        expect(result === "true" || result === "false").toBe(true);
+      },
+    );
+  });
+
   describe("CommandParser", () => {
     describe("convertOptionValue", () => {
       it("应该转换字符串类型", () => {
@@ -680,6 +943,29 @@ describe("Console", () => {
       expect(length).toBeGreaterThan(0);
     });
 
+    it("应该计算带 choices 的选项显示长度", () => {
+      const option = {
+        name: "color",
+        description: "颜色",
+        type: "string" as const,
+        choices: ["red", "green", "blue"],
+      };
+      const length = CommandHelpGenerator.calculateOptionDisplayLength(option);
+      expect(length).toBeGreaterThan(0);
+    });
+
+    it("calculateDisplayWidth 应处理空字符串", () => {
+      expect(CommandHelpGenerator.calculateDisplayWidth("")).toBe(0);
+    });
+
+    it("calculateDisplayWidth 应处理纯数字", () => {
+      expect(CommandHelpGenerator.calculateDisplayWidth("123")).toBe(3);
+    });
+
+    it("calculateDisplayWidth 应处理全角与半角混合", () => {
+      expect(CommandHelpGenerator.calculateDisplayWidth("a全1")).toBe(4);
+    });
+
     it("HelpConfig 子命令应支持 aliases 字段", () => {
       const config: HelpConfig = {
         name: "cli",
@@ -714,12 +1000,16 @@ describe("Console", () => {
       // 通过子进程运行帮助脚本，避免 showHelp 中的 exit(0) 终止测试
       const scriptPath = new URL("./help-output-script.ts", import.meta.url)
         .pathname;
-      const cmd = new Deno.Command(Deno.execPath(), {
-        args: ["run", "-A", "--no-prompt", scriptPath],
+      const runArgs = IS_DENO
+        ? ["run", "-A", "--no-prompt", scriptPath]
+        : ["run", scriptPath];
+      const helpEnv = { ...getEnvAll(), NO_COLOR: "1" };
+      const cmd = createCommand(execPath(), {
+        args: runArgs,
         stdin: "null",
         stdout: "piped",
         stderr: "piped",
-        env: { NO_COLOR: "1" }, // 禁用颜色，便于断言纯文本
+        env: helpEnv, // 禁用颜色，便于断言纯文本
       });
       const { stdout, success } = await cmd.output();
       const output = new TextDecoder().decode(stdout);
@@ -871,6 +1161,56 @@ describe("Console", () => {
       await command.execute(["file.txt", "--verbose"]);
       expect(receivedArgs).toEqual(["file.txt"]);
       expect(receivedOptions.verbose).toBe(true);
+    });
+  });
+
+  describe("ANSI 环境变量", () => {
+    it("NO_COLOR 时应禁用颜色", async () => {
+      const scriptPath = new URL("./ansi-script.ts", import.meta.url).pathname;
+      const runArgs = IS_DENO
+        ? ["run", "-A", "--no-prompt", scriptPath]
+        : ["run", scriptPath];
+      const cmd = createCommand(execPath(), {
+        args: runArgs,
+        stdout: "piped",
+        stderr: "piped",
+        env: { ...getEnvAll(), NO_COLOR: "1" },
+      });
+      const { stdout, success } = await cmd.output();
+      expect(success).toBe(true);
+      expect(new TextDecoder().decode(stdout).trim()).toBe("false");
+    });
+
+    it("DWEB_NO_COLOR 时应禁用颜色", async () => {
+      const scriptPath = new URL("./ansi-script.ts", import.meta.url).pathname;
+      const runArgs = IS_DENO
+        ? ["run", "-A", "--no-prompt", scriptPath]
+        : ["run", scriptPath];
+      const cmd = createCommand(execPath(), {
+        args: runArgs,
+        stdout: "piped",
+        stderr: "piped",
+        env: { ...getEnvAll(), DWEB_NO_COLOR: "1" },
+      });
+      const { stdout, success } = await cmd.output();
+      expect(success).toBe(true);
+      expect(new TextDecoder().decode(stdout).trim()).toBe("false");
+    });
+
+    it("TERM=dumb 时应禁用颜色", async () => {
+      const scriptPath = new URL("./ansi-script.ts", import.meta.url).pathname;
+      const runArgs = IS_DENO
+        ? ["run", "-A", "--no-prompt", scriptPath]
+        : ["run", scriptPath];
+      const cmd = createCommand(execPath(), {
+        args: runArgs,
+        stdout: "piped",
+        stderr: "piped",
+        env: { ...getEnvAll(), TERM: "dumb" },
+      });
+      const { stdout, success } = await cmd.output();
+      expect(success).toBe(true);
+      expect(new TextDecoder().decode(stdout).trim()).toBe("false");
     });
   });
 

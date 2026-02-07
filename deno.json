@@ -1,6 +1,6 @@
 {
   "name": "@dreamer/console",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "license": "MIT",
   "tasks": {
     "test": "deno test -A tests"
@@ -37,7 +37,7 @@
   },
   "imports": {
     "@dreamer/test": "jsr:@dreamer/test@^1.0.0",
-    "@dreamer/runtime-adapter": "jsr:@dreamer/runtime-adapter@^1.0.0"
+    "@dreamer/runtime-adapter": "jsr:@dreamer/runtime-adapter@^1.0.2"
   },
   "nodeModulesDir": "auto"
 }
