@@ -10,6 +10,20 @@ and this project adheres to
 
 ---
 
+## [1.0.5] - 2026-02-08
+
+### Fixed
+
+- **Windows readLineRaw double echo**: When `setStdinRaw` fails on Windows (e.g. PowerShell), the terminal keeps default echo. Previously the code also called `writeStdoutSync` for echo, causing double display and the "confirm twice" feeling. Now echo is only performed when `setStdinRaw` succeeds (`isRaw === true`).
+
+### Compatibility
+
+- Deno 2.5.0+
+- Bun 1.0.0+
+- Requires TTY for interactive features
+
+---
+
 ## [1.0.4] - 2025-02-07
 
 ### Added

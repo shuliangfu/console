@@ -9,6 +9,20 @@
 
 ---
 
+## [1.0.5] - 2026-02-08
+
+### 修复
+
+- **Windows readLineRaw 双重回显**：当 `setStdinRaw` 在 Windows（如 PowerShell）上失败时，终端保持默认回显。此前代码还会调用 `writeStdoutSync` 进行回显，导致双重显示和「需二次确认」的错觉。现仅在 `setStdinRaw` 成功（`isRaw === true`）时才进行回显。
+
+### 兼容性
+
+- Deno 2.5.0+
+- Bun 1.0.0+
+- 交互式功能需要 TTY
+
+---
+
 ## [1.0.4] - 2025-02-07
 
 ### 新增

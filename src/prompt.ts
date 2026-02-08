@@ -96,6 +96,9 @@ function utf8LeadLength(b: number): number {
 /**
  * 在 TTY 下用原始模式读一行（逐字符读取、回显，遇 \r 或 \n 结束）
  * 支持 UTF-8 多字节字符（如中文）；避免通过 ./script 执行时终端未把 \r 当行尾导致回车无效
+ *
+ * Windows 兼容：setStdinRaw 在 Windows 上可能失败（返回 false），此时终端保持默认 echo。
+ * 若程序再 writeStdoutSync 回显，会导致双重回显（用户误以为需二次确认）。仅在 isRaw 时回显。
  */
 async function readLineRaw(): Promise<string | null> {
   const encoder = new TextEncoder();
@@ -116,13 +119,13 @@ async function readLineRaw(): Promise<string | null> {
         break;
       }
       if (b === 0x03) {
-        writeStdoutSync(encoder.encode("\n"));
+        if (isRaw) writeStdoutSync(encoder.encode("\n"));
         exit(0);
       }
       if (b === 0x7f || b === 0x08) {
         if (input.length > 0) {
           input = input.slice(0, -1);
-          writeStdoutSync(encoder.encode("\b \b"));
+          if (isRaw) writeStdoutSync(encoder.encode("\b \b"));
         }
         continue;
       }
@@ -132,10 +135,10 @@ async function readLineRaw(): Promise<string | null> {
         const bytes = new Uint8Array(pending.splice(0, need));
         const ch = decoder.decode(bytes);
         input += ch;
-        writeStdoutSync(bytes);
+        if (isRaw) writeStdoutSync(bytes);
       }
     }
-    writeStdoutSync(encoder.encode("\n"));
+    if (isRaw) writeStdoutSync(encoder.encode("\n"));
     return input.trim() || null;
   } finally {
     if (isRaw) setStdinRaw(false);

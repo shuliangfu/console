@@ -618,9 +618,9 @@ bun test tests/mod.test.ts
 
 ## 📋 变更日志
 
-### [1.0.4] - 2025-02-07
+### [1.0.5] - 2026-02-08
 
-**新增**：CHANGELOG-zh.md、README 变更日志章节。**变更**：runtime-adapter ^1.0.2、TEST_REPORT（141 测试）、README 测试徽章。
+**修复**：Windows 下 setStdinRaw 失败时 readLineRaw 双重回显，输入不再显示两次。
 
 完整历史详见 [CHANGELOG-zh.md](./CHANGELOG-zh.md)。
 

@@ -618,11 +618,11 @@ Coverage:
 
 ## 📋 Changelog
 
-### [1.0.4] - 2025-02-07
+### [1.0.5] - 2026-02-08
 
-**Added**: CHANGELOG-zh.md, README changelog section. **Changed**: runtime-adapter ^1.0.2, TEST_REPORT (141 tests), README test badges.
+**Fixed**: Windows readLineRaw double echo when setStdinRaw fails; input no longer appears twice.
 
-See [CHANGELOG.md](./CHANGELOG.md) for full history.
+Full history: [CHANGELOG.md](./CHANGELOG.md).
 
 ---
 
