@@ -618,9 +618,9 @@ bun test tests/mod.test.ts
 
 ## 📋 变更日志
 
-### [1.0.5] - 2026-02-08
+### [1.0.6] - 2026-02-08
 
-**修复**：Windows 下 setStdinRaw 失败时 readLineRaw 双重回显，输入不再显示两次。
+**修复**：readLineRaw 现正确处理多字节单次读取（如 `"1\r\n"` 一次性到达）。
 
 完整历史详见 [CHANGELOG-zh.md](./CHANGELOG-zh.md)。
 

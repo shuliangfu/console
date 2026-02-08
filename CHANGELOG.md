@@ -10,6 +10,14 @@ and this project adheres to
 
 ---
 
+## [1.0.6] - 2026-02-08
+
+### Fixed
+
+- **readLineRaw multi-byte handling**: When a single read returns multiple bytes (e.g. `"1\r\n"`), the loop now correctly processes each byte instead of only the first. Ensures proper handling of line endings when input arrives in one chunk.
+
+---
+
 ## [1.0.5] - 2026-02-08
 
 ### Fixed

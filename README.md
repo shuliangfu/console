@@ -618,9 +618,9 @@ Coverage:
 
 ## 📋 Changelog
 
-### [1.0.5] - 2026-02-08
+### [1.0.6] - 2026-02-08
 
-**Fixed**: Windows readLineRaw double echo when setStdinRaw fails; input no longer appears twice.
+**Fixed**: readLineRaw now correctly handles multi-byte reads (e.g. `"1\r\n"` in one chunk).
 
 Full history: [CHANGELOG.md](./CHANGELOG.md).
 
