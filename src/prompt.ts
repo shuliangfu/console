@@ -114,32 +114,35 @@ async function readLineRaw(): Promise<string | null> {
       const buf = new Uint8Array(10);
       const n = await readStdin(buf);
       if (n === null || n === 0) continue;
-      const b = buf[0];
-      if (b === 0x0d || b === 0x0a) {
-        break;
-      }
-      if (b === 0x03) {
-        if (isRaw) writeStdoutSync(encoder.encode("\n"));
-        exit(0);
-      }
-      if (b === 0x7f || b === 0x08) {
-        if (input.length > 0) {
-          input = input.slice(0, -1);
-          if (isRaw) writeStdoutSync(encoder.encode("\b \b"));
+      // 遍历本次读取的所有字节，正确处理一次 read 返回 "1\r\n" 等情况
+      for (let i = 0; i < n; i++) {
+        const b = buf[i];
+        if (b === 0x0d || b === 0x0a) {
+          // 遇到回车/换行立即结束
+          if (isRaw) writeStdoutSync(encoder.encode("\n"));
+          return input.trim() || null;
         }
-        continue;
-      }
-      pending.push(b);
-      const need = pending.length >= 1 ? utf8LeadLength(pending[0]) : 0;
-      if (need > 0 && pending.length >= need) {
-        const bytes = new Uint8Array(pending.splice(0, need));
-        const ch = decoder.decode(bytes);
-        input += ch;
-        if (isRaw) writeStdoutSync(bytes);
+        if (b === 0x03) {
+          if (isRaw) writeStdoutSync(encoder.encode("\n"));
+          exit(0);
+        }
+        if (b === 0x7f || b === 0x08) {
+          if (input.length > 0) {
+            input = input.slice(0, -1);
+            if (isRaw) writeStdoutSync(encoder.encode("\b \b"));
+          }
+          continue;
+        }
+        pending.push(b);
+        const need = pending.length >= 1 ? utf8LeadLength(pending[0]) : 0;
+        if (need > 0 && pending.length >= need) {
+          const bytes = new Uint8Array(pending.splice(0, need));
+          const ch = decoder.decode(bytes);
+          input += ch;
+          if (isRaw) writeStdoutSync(bytes);
+        }
       }
     }
-    if (isRaw) writeStdoutSync(encoder.encode("\n"));
-    return input.trim() || null;
   } finally {
     if (isRaw) setStdinRaw(false);
   }
