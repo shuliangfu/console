@@ -77,11 +77,13 @@ deno run -A examples/server-example.ts --port 3000
 ### 基础 CLI 示例 (`basic-cli.ts`)
 
 演示如何创建简单的命令行工具：
+
 - 创建命令实例
 - 添加选项和参数
 - 执行命令处理函数
 
 **关键特性**：
+
 - 基本命令创建
 - 选项定义和使用
 - 参数解析
@@ -89,6 +91,7 @@ deno run -A examples/server-example.ts --port 3000
 ### 高级命令功能示例 (`command-advanced.ts`)
 
 演示高级命令功能：
+
 - 子命令创建和管理
 - 钩子函数（before/after）
 - 选项验证
@@ -97,6 +100,7 @@ deno run -A examples/server-example.ts --port 3000
 - 子命令别名
 
 **关键特性**：
+
 - 子命令系统
 - 选项分组
 - 验证和约束
@@ -105,12 +109,14 @@ deno run -A examples/server-example.ts --port 3000
 ### 输出工具示例 (`output-examples.ts`)
 
 演示各种美化输出功能：
+
 - 成功/错误/警告/信息消息
 - 标题和分隔线
 - 键值对显示
 - 列表显示
 
 **关键特性**：
+
 - 美化的消息输出
 - 格式化显示
 - 中文支持
@@ -118,6 +124,7 @@ deno run -A examples/server-example.ts --port 3000
 ### 表格显示示例 (`table-examples.ts`)
 
 演示表格显示功能：
+
 - 基本表格
 - 带边框的表格
 - 自定义列对齐
@@ -125,6 +132,7 @@ deno run -A examples/server-example.ts --port 3000
 - 进度条
 
 **关键特性**：
+
 - 多种表格样式
 - 自定义列配置
 - 进度条显示
@@ -132,12 +140,14 @@ deno run -A examples/server-example.ts --port 3000
 ### 交互式 CLI 示例 (`interactive-cli.ts`)
 
 演示用户交互功能：
+
 - 文本输入
 - 专用输入函数（邮箱、数字、用户名、密码）
 - 确认提示
 - 单选和多选
 
 **关键特性**：
+
 - 用户输入处理
 - 输入验证
 - 交互式选择
@@ -147,12 +157,14 @@ deno run -A examples/server-example.ts --port 3000
 ### ANSI 颜色和样式示例 (`ansi-examples.ts`)
 
 演示 ANSI 颜色和光标控制：
+
 - 颜色常量使用
 - colorize 函数
 - 移除 ANSI 代码
 - 光标控制
 
 **关键特性**：
+
 - 颜色支持检测
 - 颜色和样式应用
 - 光标控制
@@ -160,11 +172,13 @@ deno run -A examples/server-example.ts --port 3000
 ### 服务器应用示例 (`server-example.ts`)
 
 演示如何使用 `keepAlive()` 保持服务器运行：
+
 - keepAlive() 的使用
 - 服务器启动和关闭
 - 信号处理
 
 **关键特性**：
+
 - 保持程序运行
 - 信号监听
 - 优雅关闭
@@ -190,10 +204,11 @@ deno run -A examples/server-example.ts --port 3000
 ## 🔗 相关文档
 
 - [README.md](../README.md) - 库的主要文档
-- [TEST_REPORT.md](../TEST_REPORT.md) - 测试报告
+- [TEST_REPORT.md](../docs/en-US/TEST_REPORT.md) - 测试报告（英文）
 
 ## 💡 更多示例
 
 如果你需要更多示例或有问题，请查看：
+
 - 测试文件 (`tests/`) - 包含大量实际使用场景
 - 源代码 (`src/`) - 包含详细的 JSDoc 注释

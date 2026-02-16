@@ -5,15 +5,15 @@
  */
 
 import {
-  colors,
-  colorize,
-  stripAnsiCodes,
-  shouldUseColor,
-  clearScreen,
-  hideCursor,
-  showCursor,
-  moveCursor,
   clearLine,
+  clearScreen,
+  colorize,
+  colors,
+  hideCursor,
+  moveCursor,
+  shouldUseColor,
+  showCursor,
+  stripAnsiCodes,
 } from "../src/mod.ts";
 
 // 检查是否支持颜色

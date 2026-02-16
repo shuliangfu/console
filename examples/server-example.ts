@@ -4,7 +4,7 @@
  * 演示如何使用 keepAlive() 保持服务器运行
  */
 
-import { Command, success, info, error } from "../src/mod.ts";
+import { Command, error, info, success } from "../src/mod.ts";
 import type { ParsedOptions } from "../src/mod.ts";
 
 const server = new Command("server", "启动服务器")

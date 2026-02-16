@@ -1,18 +1,19 @@
 # @dreamer/console
 
-> 一个兼容 Deno 和 Bun 的控制台工具库，提供命令行命令封装、美化输出、表格显示和用户交互等功能
+> 一个兼容 Deno 和 Bun
+> 的控制台工具包，提供命令行命令封装、美化输出、表格显示和用户交互等功能
 
-[English](./README.md) | 中文 (Chinese)
+[English](../../README.md) | 中文 (Chinese)
 
 [![JSR](https://jsr.io/badges/@dreamer/console)](https://jsr.io/@dreamer/console)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE.md)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
 [![Tests](https://img.shields.io/badge/tests-140%20passed%20%7C%201%20skip-brightgreen)](./TEST_REPORT.md)
 
 ---
 
 ## 🎯 功能
 
-控制台工具库，提供命令行命令封装、美化输出、表格显示和用户交互等功能，让命令行应用开发更简单、更美观。
+控制台工具包，提供命令行命令封装、美化输出、表格显示和用户交互等功能，让命令行应用开发更简单、更美观。
 
 ---
 
@@ -54,12 +55,13 @@
 
 ## 🎨 设计原则
 
-**所有 @dreamer/* 库都遵循以下原则**：
+__所有 @dreamer/_ 包都遵循以下原则_*：
 
 - **主包（@dreamer/xxx）**：用于服务端（兼容 Deno 和 Bun 运行时）
 - **客户端子包（@dreamer/xxx/client）**：用于客户端（浏览器环境）
 
 这样可以：
+
 - 明确区分服务端和客户端代码
 - 避免在客户端代码中引入服务端依赖
 - 提供更好的类型安全和代码提示
@@ -95,13 +97,13 @@ bunx jsr add @dreamer/console
 
 ## 🌍 环境兼容性
 
-| 环境 | 版本要求 | 状态 |
-|------|---------|------|
-| **Deno** | 2.5+ | ✅ 完全支持 |
-| **Bun** | 1.0+ | ✅ 完全支持 |
-| **服务端** | - | ✅ 支持（兼容 Deno 和 Bun 运行时，需要 TTY 终端支持） |
-| **客户端** | - | ❌ 不支持（浏览器环境不支持终端交互） |
-| **终端要求** | - | 📦 支持 ANSI 转义序列的终端（大多数现代终端都支持） |
+| 环境         | 版本要求 | 状态                                                  |
+| ------------ | -------- | ----------------------------------------------------- |
+| **Deno**     | 2.5+     | ✅ 完全支持                                           |
+| **Bun**      | 1.0+     | ✅ 完全支持                                           |
+| **服务端**   | -        | ✅ 支持（兼容 Deno 和 Bun 运行时，需要 TTY 终端支持） |
+| **客户端**   | -        | ❌ 不支持（浏览器环境不支持终端交互）                 |
+| **终端要求** | -        | 📦 支持 ANSI 转义序列的终端（大多数现代终端都支持）   |
 
 ---
 
@@ -143,7 +145,8 @@ await cmd.execute();
 
 #### 保持应用运行（keepAlive）
 
-默认情况下，命令执行完成后会自动退出程序。如果你需要保持程序运行（例如服务器、监听器等），可以使用 `keepAlive()` 方法：
+默认情况下，命令执行完成后会自动退出程序。如果你需要保持程序运行（例如服务器、监听器等），可以使用
+`keepAlive()` 方法：
 
 ```typescript
 import { Command } from "jsr:@dreamer/console";
@@ -169,7 +172,8 @@ const server = new Command("server", "启动服务器")
 await server.execute();
 ```
 
-**注意**：如果不使用 `keepAlive()`，命令执行完成后会自动调用 `exit(0)` 退出程序。这对于需要持续运行的应用（如服务器、守护进程、监听器等）非常重要。
+**注意**：如果不使用 `keepAlive()`，命令执行完成后会自动调用 `exit(0)`
+退出程序。这对于需要持续运行的应用（如服务器、守护进程、监听器等）非常重要。
 
 #### 子命令
 
@@ -180,7 +184,7 @@ const app = new Command("app", "应用程序");
 
 // 创建子命令
 const createCmd = app.command("create", "创建资源")
-  .alias("c")  // 子命令别名，帮助中显示为 "create (c)"，支持 "app c" 路由
+  .alias("c") // 子命令别名，帮助中显示为 "create (c)"，支持 "app c" 路由
   .option({
     name: "name",
     alias: "n",
@@ -270,7 +274,18 @@ await cmd.execute();
 ### 美化输出
 
 ```typescript
-import { success, error, warning, info, title, separator, keyValue, keyValuePairs, list, numberedList } from "jsr:@dreamer/console";
+import {
+  error,
+  info,
+  keyValue,
+  keyValuePairs,
+  list,
+  numberedList,
+  separator,
+  success,
+  title,
+  warning,
+} from "jsr:@dreamer/console";
 
 // 基本消息
 success("操作成功！");
@@ -306,7 +321,13 @@ numberedList(["第一项", "第二项"], 0); // 自定义起始编号
 ### 表格显示
 
 ```typescript
-import { table, keyValueTable, progressBar, progressBarLive, progressBarLiveFinish } from "jsr:@dreamer/console";
+import {
+  keyValueTable,
+  progressBar,
+  progressBarLive,
+  progressBarLiveFinish,
+  table,
+} from "jsr:@dreamer/console";
 
 // 基本表格
 const data = [
@@ -352,7 +373,12 @@ progressBarLiveFinish();
 ### Spinner（加载指示器）
 
 ```typescript
-import { startSpinner, stopSpinner, succeedSpinner, failSpinner } from "jsr:@dreamer/console";
+import {
+  failSpinner,
+  startSpinner,
+  stopSpinner,
+  succeedSpinner,
+} from "jsr:@dreamer/console";
 
 startSpinner("加载中...");
 await doSomething();
@@ -362,7 +388,21 @@ succeedSpinner("完成"); // 或 failSpinner("失败"); 或 stopSpinner();
 ### 用户交互
 
 ```typescript
-import { prompt, input, inputEmail, inputNumber, inputPassword, inputUsername, confirm, select, multiSelect, interactiveMenu, interactiveMultiMenu, interactiveMenuSearch, pause } from "jsr:@dreamer/console";
+import {
+  confirm,
+  input,
+  inputEmail,
+  inputNumber,
+  inputPassword,
+  inputUsername,
+  interactiveMenu,
+  interactiveMenuSearch,
+  interactiveMultiMenu,
+  multiSelect,
+  pause,
+  prompt,
+  select,
+} from "jsr:@dreamer/console";
 
 // 文本输入
 const name = await prompt("请输入姓名：");
@@ -375,7 +415,9 @@ const password = await inputPassword("请输入密码：");
 const username = await inputUsername("请输入用户名：");
 const text = await input("请输入文本：");
 // 带默认值与超时的 input
-const nameWithDefault = await input("姓名（直接回车使用默认）：", { default: "张三" });
+const nameWithDefault = await input("姓名（直接回车使用默认）：", {
+  default: "张三",
+});
 const quickReply = await input("3 秒内输入：", { timeoutMs: 3000 });
 
 // 确认
@@ -397,13 +439,26 @@ const choiceIndices = await multiSelect("选择多个选项：", multiOptions);
 const selectedValues = choiceIndices.map((idx) => multiOptionValues[idx]); // 获取对应的值数组
 
 // 交互式菜单（上下键选择 + Enter 确认，适合 TTY）
-const menuIndex = await interactiveMenu("选择一项：", ["选项 1", "选项 2", "选项 3"], 0);
+const menuIndex = await interactiveMenu("选择一项：", [
+  "选项 1",
+  "选项 2",
+  "选项 3",
+], 0);
 
 // 交互式多选（空格勾选/取消，Enter 确认）
-const multiIndices = await interactiveMultiMenu("选择多项：", ["A", "B", "C"], [], { min: 1, max: 2 });
+const multiIndices = await interactiveMultiMenu(
+  "选择多项：",
+  ["A", "B", "C"],
+  [],
+  { min: 1, max: 2 },
+);
 
 // 可搜索的交互式菜单（输入过滤后 ↑↓ 选择）
-const searchIndex = await interactiveMenuSearch("选择一项：", ["苹果", "香蕉", "橙子"], 0);
+const searchIndex = await interactiveMenuSearch("选择一项：", [
+  "苹果",
+  "香蕉",
+  "橙子",
+], 0);
 
 // 暂停
 await pause("按 Enter 键继续...");
@@ -412,7 +467,17 @@ await pause("按 Enter 键继续...");
 ### ANSI 颜色和样式
 
 ```typescript
-import { colors, colorize, stripAnsiCodes, shouldUseColor, clearScreen, hideCursor, showCursor, moveCursor, clearLine } from "jsr:@dreamer/console";
+import {
+  clearLine,
+  clearScreen,
+  colorize,
+  colors,
+  hideCursor,
+  moveCursor,
+  shouldUseColor,
+  showCursor,
+  stripAnsiCodes,
+} from "jsr:@dreamer/console";
 
 // 使用颜色常量
 console.log(`${colors.red}红色文本${colors.reset}`);
@@ -473,8 +538,10 @@ clearLine(); // 清除当前行
 ##### 子命令
 
 - **`command(name: string, description?: string): Command`** - 添加子命令
-- **`subcommand.alias(alias: string): this`** - 子命令调用，注册别名（帮助中显示如 `create (c)`，支持 `app c` 路由）
-- **`subcommandAlias(alias: string, commandName: string): this`** - 为子命令添加别名
+- **`subcommand.alias(alias: string): this`** -
+  子命令调用，注册别名（帮助中显示如 `create (c)`，支持 `app c` 路由）
+- **`subcommandAlias(alias: string, commandName: string): this`** -
+  为子命令添加别名
 
 ##### 其他
 
@@ -485,18 +552,18 @@ clearLine(); // 清除当前行
 
 ```typescript
 interface CommandOption {
-  name: string;                    // 选项名称（长格式，如 --help）
-  alias?: string;                  // 选项别名（短格式，如 -h）
-  description: string;             // 选项描述
-  requiresValue?: boolean;         // 是否需要值
+  name: string; // 选项名称（长格式，如 --help）
+  alias?: string; // 选项别名（短格式，如 -h）
+  description: string; // 选项描述
+  requiresValue?: boolean; // 是否需要值
   defaultValue?: string | boolean | number; // 默认值
   type?: "string" | "number" | "boolean" | "array"; // 选项值类型
   validator?: (value: string) => boolean | string; // 验证函数
-  group?: string;                  // 选项分组名称
-  required?: boolean;              // 是否必需
-  conflicts?: string[];            // 冲突的选项名称列表
-  dependsOn?: string[];            // 依赖的选项名称列表
-  choices?: string[];             // 可选值列表（枚举）
+  group?: string; // 选项分组名称
+  required?: boolean; // 是否必需
+  conflicts?: string[]; // 冲突的选项名称列表
+  dependsOn?: string[]; // 依赖的选项名称列表
+  choices?: string[]; // 可选值列表（枚举）
 }
 ```
 
@@ -504,11 +571,11 @@ interface CommandOption {
 
 ```typescript
 interface CommandArgument {
-  name: string;                    // 参数名称
-  description: string;             // 参数描述
-  required?: boolean;              // 是否必需
+  name: string; // 参数名称
+  description: string; // 参数描述
+  required?: boolean; // 是否必需
   validator?: (value: string) => boolean | string; // 验证函数
-  choices?: string[];             // 可选值列表（枚举）
+  choices?: string[]; // 可选值列表（枚举）
 }
 ```
 
@@ -518,29 +585,37 @@ interface CommandArgument {
 - **`error(message: string): void`** - 输出错误消息（红色 ✗）
 - **`warning(message: string): void`** - 输出警告消息（黄色 ⚠）
 - **`info(message: string): void`** - 输出信息消息（蓝色 ℹ）
-- **`separator(char?: string, length?: number): void`** - 输出分隔线（默认：━，50 字符）
+- **`separator(char?: string, length?: number): void`** -
+  输出分隔线（默认：━，50 字符）
 - **`title(title: string): void`** - 输出标题（加粗，青色）
 - **`keyValue(key: string, value: string | number): void`** - 输出键值对
-- **`keyValuePairs(data: Record<string, string | number>): void`** - 输出多个键值对
+- **`keyValuePairs(data: Record<string, string | number>): void`** -
+  输出多个键值对
 - **`list(items: string[], prefix?: string): void`** - 输出列表（默认前缀：•）
-- **`numberedList(items: string[], start?: number): void`** - 输出编号列表（默认起始：1）
+- **`numberedList(items: string[], start?: number): void`** -
+  输出编号列表（默认起始：1）
 
 ### 表格工具
 
-- **`table(data: Record<string, any>[], columns?: TableColumn[], options?: TableOptions): void`** - 创建表格
-- **`keyValueTable(data: Record<string, any>, options?: TableOptions): void`** - 创建键值对表格
-- **`progressBar(current: number, total: number, width?: number, label?: string): void`** - 显示进度条（单次输出）
-- **`progressBarLive(current: number, total: number, width?: number, label?: string): void`** - 原地更新进度条（同一行刷新，适合循环内调用）
-- **`progressBarLiveFinish(): void`** - 结束原地进度条并换行（在最后一次 `progressBarLive` 后调用）
+- **`table(data: Record<string, any>[], columns?: TableColumn[], options?: TableOptions): void`** -
+  创建表格
+- **`keyValueTable(data: Record<string, any>, options?: TableOptions): void`** -
+  创建键值对表格
+- **`progressBar(current: number, total: number, width?: number, label?: string): void`** -
+  显示进度条（单次输出）
+- **`progressBarLive(current: number, total: number, width?: number, label?: string): void`** -
+  原地更新进度条（同一行刷新，适合循环内调用）
+- **`progressBarLiveFinish(): void`** - 结束原地进度条并换行（在最后一次
+  `progressBarLive` 后调用）
 
 #### TableColumn
 
 ```typescript
 interface TableColumn {
-  key: string;                     // 数据键名
-  label?: string;                  // 列标题（默认使用 key）
+  key: string; // 数据键名
+  label?: string; // 列标题（默认使用 key）
   align?: "left" | "right" | "center"; // 对齐方式（默认：left）
-  width?: number;                  // 列宽度（自动计算）
+  width?: number; // 列宽度（自动计算）
 }
 ```
 
@@ -548,26 +623,39 @@ interface TableColumn {
 
 ```typescript
 interface TableOptions {
-  border?: boolean;                // 是否显示边框
+  border?: boolean; // 是否显示边框
   borderStyle?: "single" | "double" | "rounded"; // 边框样式
-  header?: boolean;                // 是否显示表头
+  header?: boolean; // 是否显示表头
 }
 ```
 
 ### 提示工具
 
-- **`prompt(message: string, hidden?: boolean, options?: PromptOptions): Promise<string | null>`** - 文本输入提示。`options.default` 为空回车时的默认值，`options.timeoutMs` 为超时毫秒（超时返回 `default` 或 `null`）
-- **`input(message: string, options?: InputOptions): Promise<string | null>`** - 文本输入。`options.default`、`options.timeoutMs` 同上
+- **`prompt(message: string, hidden?: boolean, options?: PromptOptions): Promise<string | null>`** -
+  文本输入提示。`options.default` 为空回车时的默认值，`options.timeoutMs`
+  为超时毫秒（超时返回 `default` 或 `null`）
+- **`input(message: string, options?: InputOptions): Promise<string | null>`** -
+  文本输入。`options.default`、`options.timeoutMs` 同上
 - **`inputEmail(message: string): Promise<string | null>`** - 邮箱输入（带验证）
-- **`inputNumber(message: string): Promise<number | null>`** - 数字输入（带验证）
-- **`inputPassword(message: string): Promise<string | null>`** - 密码输入（隐藏显示）
-- **`inputUsername(message: string): Promise<string | null>`** - 用户名输入（带验证）
-- **`confirm(message: string, defaultValue?: boolean): Promise<boolean>`** - 确认提示
-- **`select(message: string, options: string[], defaultValue?: number): Promise<number>`** - 单选（返回选中索引，从 0 开始）
-- **`multiSelect(message: string, options: string[], min?: number, max?: number): Promise<number[]>`** - 多选（返回选中索引数组）
-- **`interactiveMenu(message: string, options: string[], defaultValue?: number): Promise<number>`** - 交互式单选菜单（↑↓ 移动、Enter 确认，需 TTY）
-- **`interactiveMultiMenu(message: string, options: string[], initialSelected?: number[], menuOptions?: InteractiveMultiMenuOptions): Promise<number[]>`** - 交互式多选菜单（空格勾选/取消、↑↓ 移动、Enter 确认）。`menuOptions.min` / `menuOptions.max` 可限制最少/最多选择数
-- **`interactiveMenuSearch(message: string, options: string[], defaultValue?: number): Promise<number>`** - 可搜索的交互式单选菜单（输入过滤、↑↓ 选择、Enter 确认）
+- **`inputNumber(message: string): Promise<number | null>`** -
+  数字输入（带验证）
+- **`inputPassword(message: string): Promise<string | null>`** -
+  密码输入（隐藏显示）
+- **`inputUsername(message: string): Promise<string | null>`** -
+  用户名输入（带验证）
+- **`confirm(message: string, defaultValue?: boolean): Promise<boolean>`** -
+  确认提示
+- **`select(message: string, options: string[], defaultValue?: number): Promise<number>`** -
+  单选（返回选中索引，从 0 开始）
+- **`multiSelect(message: string, options: string[], min?: number, max?: number): Promise<number[]>`** -
+  多选（返回选中索引数组）
+- **`interactiveMenu(message: string, options: string[], defaultValue?: number): Promise<number>`** -
+  交互式单选菜单（↑↓ 移动、Enter 确认，需 TTY）
+- **`interactiveMultiMenu(message: string, options: string[], initialSelected?: number[], menuOptions?: InteractiveMultiMenuOptions): Promise<number[]>`** -
+  交互式多选菜单（空格勾选/取消、↑↓ 移动、Enter 确认）。`menuOptions.min` /
+  `menuOptions.max` 可限制最少/最多选择数
+- **`interactiveMenuSearch(message: string, options: string[], defaultValue?: number): Promise<number>`** -
+  可搜索的交互式单选菜单（输入过滤、↑↓ 选择、Enter 确认）
 - **`pause(message?: string): Promise<void>`** - 暂停等待用户按 Enter
 
 ### Spinner（加载指示器）
@@ -579,10 +667,13 @@ interface TableOptions {
 
 ### ANSI 工具
 
-- **`colors`** - ANSI 颜色代码对象（reset, bright, dim, red, green, yellow, blue, magenta, cyan, white, gray）
-- **`colorize(text: string, color: keyof typeof colors, bold?: boolean): string`** - 为文本添加颜色
+- **`colors`** - ANSI 颜色代码对象（reset, bright, dim, red, green, yellow,
+  blue, magenta, cyan, white, gray）
+- **`colorize(text: string, color: keyof typeof colors, bold?: boolean): string`** -
+  为文本添加颜色
 - **`stripAnsiCodes(text: string): string`** - 移除 ANSI 代码
-- **`shouldUseColor(): boolean`** - 检查是否应该使用颜色（自动检测环境变量、TTY、Docker 等）
+- **`shouldUseColor(): boolean`** -
+  检查是否应该使用颜色（自动检测环境变量、TTY、Docker 等）
 - **`clearScreen(): void`** - 清屏
 - **`hideCursor(): void`** - 隐藏光标
 - **`showCursor(): void`** - 显示光标
@@ -608,9 +699,12 @@ bun test tests/mod.test.ts
 详细的测试报告请查看 [TEST_REPORT.md](./TEST_REPORT.md)。
 
 测试覆盖包括：
+
 - ✅ 141 个测试用例（140 通过，1 跳过）
-- ✅ 功能模块：ANSI 颜色、输出、Command、解析器、帮助、表格、Spinner、prompt（含子进程测试）
-- ✅ parseArrowKey（Windows 兼容）、ANSI 环境变量（NO_COLOR、DWEB_NO_COLOR、TERM=dumb）
+- ✅ 功能模块：ANSI
+  颜色、输出、Command、解析器、帮助、表格、Spinner、prompt（含子进程测试）
+- ✅ parseArrowKey（Windows 兼容）、ANSI
+  环境变量（NO_COLOR、DWEB_NO_COLOR、TERM=dumb）
 - ✅ Deno 和 Bun 跨运行时兼容性验证
 - ✅ 边界情况和错误处理测试
 
@@ -618,21 +712,27 @@ bun test tests/mod.test.ts
 
 ## 📋 变更日志
 
-### [1.0.6] - 2026-02-08
+### [1.0.7] - 2026-02-17
 
-**修复**：readLineRaw 现正确处理多字节单次读取（如 `"1\r\n"` 一次性到达）。
+**修复**：`-v`/`--version` 与 `--help` 打印后 CLI 正常退出，不再挂起。
+**变更**：许可证变更为 Apache 2.0；文档调整至
+`docs/en-US`、`docs/zh-CN`，链接与中文测试报告已更新。
 
-完整历史详见 [CHANGELOG-zh.md](./CHANGELOG-zh.md)。
+完整历史详见 [CHANGELOG.md](./CHANGELOG.md)。
 
 ---
 
 ## 📝 备注
 
-- **keepAlive() 的使用**：对于需要持续运行的应用（服务器、监听器等），必须使用 `keepAlive()`，否则程序会在命令执行完成后自动退出。
-- **颜色支持**：库会自动检测终端是否支持颜色，在非 TTY 环境或 Docker 容器中会自动禁用颜色。
-- **中文支持**：帮助信息支持中文显示，会自动计算中文字符的显示宽度（中文字符占 2 个字符宽度）。
+- **keepAlive() 的使用**：对于需要持续运行的应用（服务器、监听器等），必须使用
+  `keepAlive()`，否则程序会在命令执行完成后自动退出。
+- **颜色支持**：包会自动检测终端是否支持颜色，在非 TTY 环境或 Docker
+  容器中会自动禁用颜色。
+- **中文支持**：帮助信息支持中文显示，会自动计算中文字符的显示宽度（中文字符占 2
+  个字符宽度）。
 - **选项格式**：支持多种选项格式（`--option`、`-o`、`--option=value`、`--option value`）。
-- **类型转换**：选项值会自动根据 `type` 进行类型转换（string、number、boolean、array）。
+- **类型转换**：选项值会自动根据 `type`
+  进行类型转换（string、number、boolean、array）。
 - **参数验证**：支持选项和参数的验证、冲突检测、依赖关系等高级功能。
 
 ---
@@ -645,7 +745,7 @@ bun test tests/mod.test.ts
 
 ## 📄 许可证
 
-MIT License - 详见 [LICENSE.md](./LICENSE.md)
+Apache License 2.0 - 详见 [LICENSE](./LICENSE)
 
 ---
 

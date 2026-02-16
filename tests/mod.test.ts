@@ -23,10 +23,7 @@ import {
   stripAnsiCodes,
 } from "../src/ansi.ts";
 import { Command } from "../src/command.ts";
-import {
-  CommandHelpGenerator,
-  type HelpConfig,
-} from "../src/help.ts";
+import { CommandHelpGenerator, type HelpConfig } from "../src/help.ts";
 import {
   error,
   info,

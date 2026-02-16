@@ -4,7 +4,7 @@
  * 演示子命令、钩子、验证、冲突检测等高级功能
  */
 
-import { Command, success, error, info, warning } from "../src/mod.ts";
+import { Command, error, info, success, warning } from "../src/mod.ts";
 import type { ParsedOptions } from "../src/mod.ts";
 
 const app = new Command("app", "高级 CLI 应用示例")

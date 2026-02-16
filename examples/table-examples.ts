@@ -4,7 +4,7 @@
  * 演示各种表格显示功能
  */
 
-import { table, keyValueTable, progressBar } from "../src/mod.ts";
+import { keyValueTable, progressBar, table } from "../src/mod.ts";
 
 // 基本表格
 console.log("\n=== 基本表格 ===");

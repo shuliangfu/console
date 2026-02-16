@@ -1,6 +1,6 @@
 # Changelog
 
-English | [中文 (Chinese)](./CHANGELOG-zh.md)
+English | [中文 (Chinese)](../zh-CN/CHANGELOG.md)
 
 All notable changes to @dreamer/console are documented in this file.
 
@@ -10,11 +10,32 @@ and this project adheres to
 
 ---
 
+## [1.0.7] - 2026-02-17
+
+### Fixed
+
+- **CLI process exit**: After printing `--version` / `-v` or `--help`, the
+  process now calls `exit(0)` so the CLI exits instead of hanging.
+
+### Changed
+
+- **License**: Project license updated to Apache License 2.0.
+- **Docs layout**: Changelog and README moved to `docs/en-US` and `docs/zh-CN`;
+  Chinese doc filenames no longer use `-zh` suffix.
+- **Links**: All cross-doc links updated to the new paths; root README test
+  badge and TEST_REPORT link point to `docs/en-US/TEST_REPORT.md`.
+- **zh-CN TEST_REPORT**: Translated to Chinese in `docs/zh-CN/TEST_REPORT.md`.
+
+---
+
 ## [1.0.6] - 2026-02-08
 
 ### Fixed
 
-- **readLineRaw multi-byte handling**: When a single read returns multiple bytes (e.g. `"1\r\n"`), the loop now correctly processes each byte instead of only the first. Ensures proper handling of line endings when input arrives in one chunk.
+- **readLineRaw multi-byte handling**: When a single read returns multiple bytes
+  (e.g. `"1\r\n"`), the loop now correctly processes each byte instead of only
+  the first. Ensures proper handling of line endings when input arrives in one
+  chunk.
 
 ---
 
@@ -22,7 +43,11 @@ and this project adheres to
 
 ### Fixed
 
-- **Windows readLineRaw double echo**: When `setStdinRaw` fails on Windows (e.g. PowerShell), the terminal keeps default echo. Previously the code also called `writeStdoutSync` for echo, causing double display and the "confirm twice" feeling. Now echo is only performed when `setStdinRaw` succeeds (`isRaw === true`).
+- **Windows readLineRaw double echo**: When `setStdinRaw` fails on Windows (e.g.
+  PowerShell), the terminal keeps default echo. Previously the code also called
+  `writeStdoutSync` for echo, causing double display and the "confirm twice"
+  feeling. Now echo is only performed when `setStdinRaw` succeeds
+  (`isRaw === true`).
 
 ### Compatibility
 
@@ -36,12 +61,14 @@ and this project adheres to
 
 ### Added
 
-- **CHANGELOG-zh.md**: Chinese changelog
-- **README changelog section**: Changelog summary in README.md and README-zh.md
+- **docs/zh-CN/CHANGELOG.md**: Chinese changelog
+- **README changelog section**: Changelog summary in README.md and
+  docs/zh-CN/README.md
 
 ### Changed
 
-- **@dreamer/runtime-adapter**: Bump to ^1.0.2 for Bun createCommand stdin compatibility
+- **@dreamer/runtime-adapter**: Bump to ^1.0.2 for Bun createCommand stdin
+  compatibility
 - **TEST_REPORT.md**: Update to 141 tests (140 passed, 1 skipped)
 - **README**: Update test report badges and coverage summary
 
@@ -109,7 +136,8 @@ and this project adheres to
 
 ### Fixed
 
-- Help output now correctly shows subcommand aliases (e.g. `generate (g)`, `migrate (m)`)
+- Help output now correctly shows subcommand aliases (e.g. `generate (g)`,
+  `migrate (m)`)
 
 ### Compatibility
 

@@ -1,6 +1,6 @@
 # 变更日志
 
-[English](./CHANGELOG.md) | 中文 (Chinese)
+[English](../en-US/CHANGELOG.md) | 中文 (Chinese)
 
 本文件记录 @dreamer/console 的所有重要变更。
 
@@ -9,11 +9,30 @@
 
 ---
 
+## [1.0.7] - 2026-02-17
+
+### 修复
+
+- **CLI 进程退出**：打印 `--version` / `-v` 或 `--help` 后现会调用
+  `exit(0)`，进程正常退出，不再挂起。
+
+### 变更
+
+- **许可证**：项目许可证已变更为 Apache License 2.0。
+- **文档结构**：变更日志与 README 移至
+  `docs/en-US`、`docs/zh-CN`；中文文档文件名不再使用 `-zh` 后缀。
+- **链接**：所有文档间链接已按新路径更新；根目录 README 的测试徽章与 TEST_REPORT
+  链接指向 `docs/en-US/TEST_REPORT.md`。
+- **zh-CN 测试报告**：`docs/zh-CN/TEST_REPORT.md` 已翻译为中文。
+
+---
+
 ## [1.0.6] - 2026-02-08
 
 ### 修复
 
-- **readLineRaw 多字节处理**：单次 read 返回多字节（如 `"1\r\n"`）时，循环现正确逐字节处理而非仅处理首字节，确保输入一次性到达时行尾正确处理。
+- **readLineRaw 多字节处理**：单次 read 返回多字节（如
+  `"1\r\n"`）时，循环现正确逐字节处理而非仅处理首字节，确保输入一次性到达时行尾正确处理。
 
 ---
 
@@ -21,7 +40,10 @@
 
 ### 修复
 
-- **Windows readLineRaw 双重回显**：当 `setStdinRaw` 在 Windows（如 PowerShell）上失败时，终端保持默认回显。此前代码还会调用 `writeStdoutSync` 进行回显，导致双重显示和「需二次确认」的错觉。现仅在 `setStdinRaw` 成功（`isRaw === true`）时才进行回显。
+- **Windows readLineRaw 双重回显**：当 `setStdinRaw` 在 Windows（如
+  PowerShell）上失败时，终端保持默认回显。此前代码还会调用 `writeStdoutSync`
+  进行回显，导致双重显示和「需二次确认」的错觉。现仅在 `setStdinRaw`
+  成功（`isRaw === true`）时才进行回显。
 
 ### 兼容性
 
@@ -35,8 +57,9 @@
 
 ### 新增
 
-- **CHANGELOG-zh.md**：中文变更日志
-- **README 变更日志章节**：README.md 与 README-zh.md 中增加变更日志摘要
+- **CHANGELOG.md**：中文变更日志（位于 docs/zh-CN/）
+- **README 变更日志章节**：根目录 README.md 与 docs/zh-CN/README.md
+  中增加变更日志摘要
 
 ### 变更
 

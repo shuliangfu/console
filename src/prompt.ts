@@ -26,7 +26,10 @@ function sleep(ms: number): Promise<void> {
  * @param n 读取长度
  * @returns "up" | "down" | "esc" | null
  */
-export function parseArrowKey(bytes: Uint8Array, n: number): "up" | "down" | "esc" | null {
+export function parseArrowKey(
+  bytes: Uint8Array,
+  n: number,
+): "up" | "down" | "esc" | null {
   if (n < 1 || bytes[0] !== 0x1b) return null;
   if (n >= 3) {
     if (bytes[1] === 0x5b) {
@@ -48,7 +51,9 @@ export function parseArrowKey(bytes: Uint8Array, n: number): "up" | "down" | "es
  * @param alreadyRead 已读字节（如 [0x1b] 或 [0x1b, 0x5b]）
  * @returns "up" | "down" | "esc" | null
  */
-async function readEscSequence(alreadyRead: Uint8Array): Promise<"up" | "down" | "esc" | null> {
+async function readEscSequence(
+  alreadyRead: Uint8Array,
+): Promise<"up" | "down" | "esc" | null> {
   const need = 3 - alreadyRead.length;
   if (need <= 0) return parseArrowKey(alreadyRead, alreadyRead.length);
   const buf2 = new Uint8Array(5);

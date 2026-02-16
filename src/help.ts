@@ -4,10 +4,10 @@
  * @fileoverview 命令行帮助信息生成器
  */
 
-import { cwd, IS_BUN, IS_DENO } from "@dreamer/runtime-adapter"
-import { colors } from "./ansi.ts"
-import { exit } from "./runtime-utils.ts"
-import type { CommandArgument, CommandOption } from "./types.ts"
+import { cwd, IS_BUN, IS_DENO } from "@dreamer/runtime-adapter";
+import { colors } from "./ansi.ts";
+import { exit } from "./runtime-utils.ts";
+import type { CommandArgument, CommandOption } from "./types.ts";
 
 /** showHelp 的配置类型 */
 export interface HelpConfig {
@@ -360,7 +360,8 @@ export class CommandHelpGenerator {
             const optionDisplayLength = opt.alias
               ? opt.alias.length + 2 // -a.
               : opt.name.length + 3; // --name.
-            const optionPadding = optionDescColumn - optionIndent - optionDisplayLength;
+            const optionPadding = optionDescColumn - optionIndent -
+              optionDisplayLength;
             optionStr += " ".repeat(Math.max(0, optionPadding));
             optionStr += opt.description;
 

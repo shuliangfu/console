@@ -64,7 +64,9 @@ async function run(): Promise<void> {
         break;
       }
       case "inputWithDefault": {
-        result = await input("输入:", () => null, false, { default: "default" });
+        result = await input("输入:", () => null, false, {
+          default: "default",
+        });
         break;
       }
       case "inputEmail": {
@@ -80,8 +82,11 @@ async function run(): Promise<void> {
         break;
       }
       case "inputValidatorRetry": {
-        result = await input("输入（需为 ok）:", (v) =>
-          v === "ok" ? null : "必须输入 ok", true);
+        result = await input(
+          "输入（需为 ok）:",
+          (v) => v === "ok" ? null : "必须输入 ok",
+          true,
+        );
         break;
       }
       case "selectInvalidThenValid": {
@@ -91,7 +96,11 @@ async function run(): Promise<void> {
       }
       case "interactiveMenuFallback": {
         const opts = ["A", "B", "C"];
-        result = await interactiveMenu("请选择（管道 stdin 时回退到 select）", opts, 0);
+        result = await interactiveMenu(
+          "请选择（管道 stdin 时回退到 select）",
+          opts,
+          0,
+        );
         break;
       }
       case "inputCRLF": {

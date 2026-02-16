@@ -5,16 +5,16 @@
  */
 
 import {
-  success,
   error,
-  warning,
   info,
-  title,
-  separator,
   keyValue,
   keyValuePairs,
   list,
   numberedList,
+  separator,
+  success,
+  title,
+  warning,
 } from "../src/mod.ts";
 
 // 基本消息

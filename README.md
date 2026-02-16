@@ -1,18 +1,20 @@
 # @dreamer/console
 
-> A console utility library compatible with Deno and Bun, providing CLI command wrapping, styled output, table display, and user interaction
+> A console utility library compatible with Deno and Bun, providing CLI command
+> wrapping, styled output, table display, and user interaction
 
-English | [中文 (Chinese)](./README-zh.md)
+English | [中文 (Chinese)](./docs/zh-CN/README.md)
 
 [![JSR](https://jsr.io/badges/@dreamer/console)](https://jsr.io/@dreamer/console)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE.md)
-[![Tests](https://img.shields.io/badge/tests-140%20passed%20%7C%201%20skip-brightgreen)](./TEST_REPORT.md)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
+[![Tests](https://img.shields.io/badge/tests-140%20passed%20%7C%201%20skip-brightgreen)](./docs/en-US/TEST_REPORT.md)
 
 ---
 
 ## 🎯 Features
 
-Console utility library providing CLI command wrapping, styled output, table display, and user interaction for simpler, cleaner CLI app development.
+Console utility library providing CLI command wrapping, styled output, table
+display, and user interaction for simpler, cleaner CLI app development.
 
 ---
 
@@ -54,12 +56,13 @@ Console utility library providing CLI command wrapping, styled output, table dis
 
 ## 🎨 Design Principles
 
-**All @dreamer/* packages follow these principles**:
+__All @dreamer/_ packages follow these principles_*:
 
 - **Main package (@dreamer/xxx)**: Server-side (Deno and Bun compatible)
 - **Client subpackage (@dreamer/xxx/client)**: Client-side (browser)
 
 This provides:
+
 - Clear separation of server and client code
 - Avoid server deps in client code
 - Better type safety and hints
@@ -95,13 +98,13 @@ bunx jsr add @dreamer/console
 
 ## 🌍 Environment Compatibility
 
-| Environment | Version | Status |
-|-------------|---------|--------|
-| **Deno** | 2.5+ | ✅ Fully supported |
-| **Bun** | 1.0+ | ✅ Fully supported |
-| **Server** | - | ✅ Supported (Deno/Bun, requires TTY) |
-| **Client** | - | ❌ Not supported (no terminal in browser) |
-| **Terminal** | - | 📦 ANSI escape sequences (most modern terminals) |
+| Environment  | Version | Status                                           |
+| ------------ | ------- | ------------------------------------------------ |
+| **Deno**     | 2.5+    | ✅ Fully supported                               |
+| **Bun**      | 1.0+    | ✅ Fully supported                               |
+| **Server**   | -       | ✅ Supported (Deno/Bun, requires TTY)            |
+| **Client**   | -       | ❌ Not supported (no terminal in browser)        |
+| **Terminal** | -       | 📦 ANSI escape sequences (most modern terminals) |
 
 ---
 
@@ -143,7 +146,8 @@ await cmd.execute();
 
 #### Keep Application Running (keepAlive)
 
-By default, the process exits after command execution. Use `keepAlive()` to keep it running (e.g. servers, listeners):
+By default, the process exits after command execution. Use `keepAlive()` to keep
+it running (e.g. servers, listeners):
 
 ```typescript
 import { Command } from "jsr:@dreamer/console";
@@ -169,7 +173,9 @@ const server = new Command("server", "Start server")
 await server.execute();
 ```
 
-**Note**: Without `keepAlive()`, the process calls `exit(0)` after command completion. Use `keepAlive()` for long-running apps (servers, daemons, listeners).
+**Note**: Without `keepAlive()`, the process calls `exit(0)` after command
+completion. Use `keepAlive()` for long-running apps (servers, daemons,
+listeners).
 
 #### Subcommands
 
@@ -180,7 +186,7 @@ const app = new Command("app", "Application");
 
 // Create subcommand
 const createCmd = app.command("create", "Create resource")
-  .alias("c")  // Subcommand alias, shown as "create (c)" in help, supports "app c" routing
+  .alias("c") // Subcommand alias, shown as "create (c)" in help, supports "app c" routing
   .option({
     name: "name",
     alias: "n",
@@ -270,7 +276,18 @@ await cmd.execute();
 ### Styled Output
 
 ```typescript
-import { success, error, warning, info, title, separator, keyValue, keyValuePairs, list, numberedList } from "jsr:@dreamer/console";
+import {
+  error,
+  info,
+  keyValue,
+  keyValuePairs,
+  list,
+  numberedList,
+  separator,
+  success,
+  title,
+  warning,
+} from "jsr:@dreamer/console";
 
 // Basic messages
 success("Operation succeeded!");
@@ -306,7 +323,13 @@ numberedList(["First", "Second"], 0); // Custom start number
 ### Table Display
 
 ```typescript
-import { table, keyValueTable, progressBar, progressBarLive, progressBarLiveFinish } from "jsr:@dreamer/console";
+import {
+  keyValueTable,
+  progressBar,
+  progressBarLive,
+  progressBarLiveFinish,
+  table,
+} from "jsr:@dreamer/console";
 
 // Basic table
 const data = [
@@ -352,7 +375,12 @@ progressBarLiveFinish();
 ### Spinner
 
 ```typescript
-import { startSpinner, stopSpinner, succeedSpinner, failSpinner } from "jsr:@dreamer/console";
+import {
+  failSpinner,
+  startSpinner,
+  stopSpinner,
+  succeedSpinner,
+} from "jsr:@dreamer/console";
 
 startSpinner("Loading...");
 await doSomething();
@@ -362,7 +390,21 @@ succeedSpinner("Done"); // or failSpinner("Failed"); or stopSpinner();
 ### User Interaction
 
 ```typescript
-import { prompt, input, inputEmail, inputNumber, inputPassword, inputUsername, confirm, select, multiSelect, interactiveMenu, interactiveMultiMenu, interactiveMenuSearch, pause } from "jsr:@dreamer/console";
+import {
+  confirm,
+  input,
+  inputEmail,
+  inputNumber,
+  inputPassword,
+  inputUsername,
+  interactiveMenu,
+  interactiveMenuSearch,
+  interactiveMultiMenu,
+  multiSelect,
+  pause,
+  prompt,
+  select,
+} from "jsr:@dreamer/console";
 
 // Text input
 const name = await prompt("Enter name:");
@@ -375,7 +417,9 @@ const password = await inputPassword("Enter password:");
 const username = await inputUsername("Enter username:");
 const text = await input("Enter text:");
 // input with default and timeout
-const nameWithDefault = await input("Name (Enter for default):", { default: "John" });
+const nameWithDefault = await input("Name (Enter for default):", {
+  default: "John",
+});
 const quickReply = await input("Input within 3s:", { timeoutMs: 3000 });
 
 // Confirm
@@ -397,13 +441,26 @@ const choiceIndices = await multiSelect("Select multiple:", multiOptions);
 const selectedValues = choiceIndices.map((idx) => multiOptionValues[idx]);
 
 // Interactive menu (↑↓ + Enter, TTY)
-const menuIndex = await interactiveMenu("Select one:", ["Option 1", "Option 2", "Option 3"], 0);
+const menuIndex = await interactiveMenu("Select one:", [
+  "Option 1",
+  "Option 2",
+  "Option 3",
+], 0);
 
 // Interactive multi-select (Space toggle, Enter confirm)
-const multiIndices = await interactiveMultiMenu("Select multiple:", ["A", "B", "C"], [], { min: 1, max: 2 });
+const multiIndices = await interactiveMultiMenu(
+  "Select multiple:",
+  ["A", "B", "C"],
+  [],
+  { min: 1, max: 2 },
+);
 
 // Searchable interactive menu (filter + ↑↓ select)
-const searchIndex = await interactiveMenuSearch("Select one:", ["Apple", "Banana", "Orange"], 0);
+const searchIndex = await interactiveMenuSearch("Select one:", [
+  "Apple",
+  "Banana",
+  "Orange",
+], 0);
 
 // Pause
 await pause("Press Enter to continue...");
@@ -412,7 +469,17 @@ await pause("Press Enter to continue...");
 ### ANSI Colors and Styles
 
 ```typescript
-import { colors, colorize, stripAnsiCodes, shouldUseColor, clearScreen, hideCursor, showCursor, moveCursor, clearLine } from "jsr:@dreamer/console";
+import {
+  clearLine,
+  clearScreen,
+  colorize,
+  colors,
+  hideCursor,
+  moveCursor,
+  shouldUseColor,
+  showCursor,
+  stripAnsiCodes,
+} from "jsr:@dreamer/console";
 
 // Color constants
 console.log(`${colors.red}Red text${colors.reset}`);
@@ -473,8 +540,10 @@ CLI command wrapper with full parsing and execution.
 ##### Subcommands
 
 - **`command(name: string, description?: string): Command`** - Add subcommand
-- **`subcommand.alias(alias: string): this`** - Register subcommand alias (e.g. `create (c)`, `app c` routing)
-- **`subcommandAlias(alias: string, commandName: string): this`** - Add subcommand alias
+- **`subcommand.alias(alias: string): this`** - Register subcommand alias (e.g.
+  `create (c)`, `app c` routing)
+- **`subcommandAlias(alias: string, commandName: string): this`** - Add
+  subcommand alias
 
 ##### Other
 
@@ -485,18 +554,18 @@ CLI command wrapper with full parsing and execution.
 
 ```typescript
 interface CommandOption {
-  name: string;                    // Option name (long, e.g. --help)
-  alias?: string;                  // Alias (short, e.g. -h)
-  description: string;             // Description
-  requiresValue?: boolean;        // Requires value
+  name: string; // Option name (long, e.g. --help)
+  alias?: string; // Alias (short, e.g. -h)
+  description: string; // Description
+  requiresValue?: boolean; // Requires value
   defaultValue?: string | boolean | number; // Default
   type?: "string" | "number" | "boolean" | "array"; // Value type
   validator?: (value: string) => boolean | string; // Validator
-  group?: string;                  // Option group
-  required?: boolean;             // Required
-  conflicts?: string[];           // Conflicting options
-  dependsOn?: string[];           // Dependent options
-  choices?: string[];            // Enum values
+  group?: string; // Option group
+  required?: boolean; // Required
+  conflicts?: string[]; // Conflicting options
+  dependsOn?: string[]; // Dependent options
+  choices?: string[]; // Enum values
 }
 ```
 
@@ -504,11 +573,11 @@ interface CommandOption {
 
 ```typescript
 interface CommandArgument {
-  name: string;                    // Argument name
-  description: string;             // Description
-  required?: boolean;             // Required
+  name: string; // Argument name
+  description: string; // Description
+  required?: boolean; // Required
   validator?: (value: string) => boolean | string; // Validator
-  choices?: string[];             // Enum values
+  choices?: string[]; // Enum values
 }
 ```
 
@@ -518,29 +587,36 @@ interface CommandArgument {
 - **`error(message: string): void`** - Error message (red ✗)
 - **`warning(message: string): void`** - Warning message (yellow ⚠)
 - **`info(message: string): void`** - Info message (blue ℹ)
-- **`separator(char?: string, length?: number): void`** - Separator (default: ━, 50 chars)
+- **`separator(char?: string, length?: number): void`** - Separator (default: ━,
+  50 chars)
 - **`title(title: string): void`** - Title (bold, cyan)
 - **`keyValue(key: string, value: string | number): void`** - Key-value pair
-- **`keyValuePairs(data: Record<string, string | number>): void`** - Multiple key-values
+- **`keyValuePairs(data: Record<string, string | number>): void`** - Multiple
+  key-values
 - **`list(items: string[], prefix?: string): void`** - List (default prefix: •)
-- **`numberedList(items: string[], start?: number): void`** - Numbered list (default start: 1)
+- **`numberedList(items: string[], start?: number): void`** - Numbered list
+  (default start: 1)
 
 ### Table Utilities
 
-- **`table(data: Record<string, any>[], columns?: TableColumn[], options?: TableOptions): void`** - Create table
-- **`keyValueTable(data: Record<string, any>, options?: TableOptions): void`** - Key-value table
-- **`progressBar(current: number, total: number, width?: number, label?: string): void`** - Progress bar (single output)
-- **`progressBarLive(current: number, total: number, width?: number, label?: string): void`** - In-place progress bar (same-line refresh)
+- **`table(data: Record<string, any>[], columns?: TableColumn[], options?: TableOptions): void`** -
+  Create table
+- **`keyValueTable(data: Record<string, any>, options?: TableOptions): void`** -
+  Key-value table
+- **`progressBar(current: number, total: number, width?: number, label?: string): void`** -
+  Progress bar (single output)
+- **`progressBarLive(current: number, total: number, width?: number, label?: string): void`** -
+  In-place progress bar (same-line refresh)
 - **`progressBarLiveFinish(): void`** - Finish in-place progress bar and newline
 
 #### TableColumn
 
 ```typescript
 interface TableColumn {
-  key: string;                     // Data key
-  label?: string;                  // Column header (default: key)
+  key: string; // Data key
+  label?: string; // Column header (default: key)
   align?: "left" | "right" | "center"; // Alignment (default: left)
-  width?: number;                  // Column width (auto)
+  width?: number; // Column width (auto)
 }
 ```
 
@@ -548,26 +624,40 @@ interface TableColumn {
 
 ```typescript
 interface TableOptions {
-  border?: boolean;                // Show border
+  border?: boolean; // Show border
   borderStyle?: "single" | "double" | "rounded"; // Border style
-  header?: boolean;                // Show header
+  header?: boolean; // Show header
 }
 ```
 
 ### Prompt Utilities
 
-- **`prompt(message: string, hidden?: boolean, options?: PromptOptions): Promise<string | null>`** - Text input. `options.default` for default on empty Enter, `options.timeoutMs` for timeout (returns `default` or `null`)
-- **`input(message: string, options?: InputOptions): Promise<string | null>`** - Text input. Same `options.default`, `options.timeoutMs`
-- **`inputEmail(message: string): Promise<string | null>`** - Email input (with validation)
-- **`inputNumber(message: string): Promise<number | null>`** - Number input (with validation)
-- **`inputPassword(message: string): Promise<string | null>`** - Password input (hidden)
-- **`inputUsername(message: string): Promise<string | null>`** - Username input (with validation)
-- **`confirm(message: string, defaultValue?: boolean): Promise<boolean>`** - Confirm
-- **`select(message: string, options: string[], defaultValue?: number): Promise<number>`** - Single select (returns index, 0-based)
-- **`multiSelect(message: string, options: string[], min?: number, max?: number): Promise<number[]>`** - Multi-select (returns indices)
-- **`interactiveMenu(message: string, options: string[], defaultValue?: number): Promise<number>`** - Interactive single menu (↑↓ + Enter, TTY)
-- **`interactiveMultiMenu(message: string, options: string[], initialSelected?: number[], menuOptions?: InteractiveMultiMenuOptions): Promise<number[]>`** - Interactive multi menu (Space toggle, ↑↓, Enter). `menuOptions.min` / `menuOptions.max` for min/max selection
-- **`interactiveMenuSearch(message: string, options: string[], defaultValue?: number): Promise<number>`** - Searchable interactive menu (filter + ↑↓ + Enter)
+- **`prompt(message: string, hidden?: boolean, options?: PromptOptions): Promise<string | null>`** -
+  Text input. `options.default` for default on empty Enter, `options.timeoutMs`
+  for timeout (returns `default` or `null`)
+- **`input(message: string, options?: InputOptions): Promise<string | null>`** -
+  Text input. Same `options.default`, `options.timeoutMs`
+- **`inputEmail(message: string): Promise<string | null>`** - Email input (with
+  validation)
+- **`inputNumber(message: string): Promise<number | null>`** - Number input
+  (with validation)
+- **`inputPassword(message: string): Promise<string | null>`** - Password input
+  (hidden)
+- **`inputUsername(message: string): Promise<string | null>`** - Username input
+  (with validation)
+- **`confirm(message: string, defaultValue?: boolean): Promise<boolean>`** -
+  Confirm
+- **`select(message: string, options: string[], defaultValue?: number): Promise<number>`** -
+  Single select (returns index, 0-based)
+- **`multiSelect(message: string, options: string[], min?: number, max?: number): Promise<number[]>`** -
+  Multi-select (returns indices)
+- **`interactiveMenu(message: string, options: string[], defaultValue?: number): Promise<number>`** -
+  Interactive single menu (↑↓ + Enter, TTY)
+- **`interactiveMultiMenu(message: string, options: string[], initialSelected?: number[], menuOptions?: InteractiveMultiMenuOptions): Promise<number[]>`** -
+  Interactive multi menu (Space toggle, ↑↓, Enter). `menuOptions.min` /
+  `menuOptions.max` for min/max selection
+- **`interactiveMenuSearch(message: string, options: string[], defaultValue?: number): Promise<number>`** -
+  Searchable interactive menu (filter + ↑↓ + Enter)
 - **`pause(message?: string): Promise<void>`** - Pause until Enter
 
 ### Spinner
@@ -579,10 +669,13 @@ interface TableOptions {
 
 ### ANSI Utilities
 
-- **`colors`** - ANSI color codes (reset, bright, dim, red, green, yellow, blue, magenta, cyan, white, gray)
-- **`colorize(text: string, color: keyof typeof colors, bold?: boolean): string`** - Add color to text
+- **`colors`** - ANSI color codes (reset, bright, dim, red, green, yellow, blue,
+  magenta, cyan, white, gray)
+- **`colorize(text: string, color: keyof typeof colors, bold?: boolean): string`** -
+  Add color to text
 - **`stripAnsiCodes(text: string): string`** - Remove ANSI codes
-- **`shouldUseColor(): boolean`** - Check if color should be used (env, TTY, Docker)
+- **`shouldUseColor(): boolean`** - Check if color should be used (env, TTY,
+  Docker)
 - **`clearScreen(): void`** - Clear screen
 - **`hideCursor(): void`** - Hide cursor
 - **`showCursor(): void`** - Show cursor
@@ -605,12 +698,15 @@ bun test tests/mod.test.ts
 
 ### Test Report
 
-See [TEST_REPORT.md](./TEST_REPORT.md) for details.
+See [TEST_REPORT.md](./docs/en-US/TEST_REPORT.md) for details.
 
 Coverage:
+
 - ✅ 141 tests (140 passed, 1 skipped)
-- ✅ Feature modules: ANSI colors, output, Command, parser, help, table, Spinner, prompt (incl. subprocess tests)
-- ✅ parseArrowKey (Windows compatible), ANSI env vars (NO_COLOR, DWEB_NO_COLOR, TERM=dumb)
+- ✅ Feature modules: ANSI colors, output, Command, parser, help, table,
+  Spinner, prompt (incl. subprocess tests)
+- ✅ parseArrowKey (Windows compatible), ANSI env vars (NO_COLOR, DWEB_NO_COLOR,
+  TERM=dumb)
 - ✅ Deno and Bun cross-runtime
 - ✅ Edge cases and error handling
 
@@ -618,21 +714,26 @@ Coverage:
 
 ## 📋 Changelog
 
-### [1.0.6] - 2026-02-08
+### [1.0.7] - 2026-02-17
 
-**Fixed**: readLineRaw now correctly handles multi-byte reads (e.g. `"1\r\n"` in one chunk).
+**Fixed**: CLI exits after `-v`/`--version` and `--help` (no longer hangs).
+**Changed**: License updated to Apache 2.0; docs reorganized to `docs/en-US` and
+`docs/zh-CN`; links and zh-CN TEST_REPORT updated.
 
-Full history: [CHANGELOG.md](./CHANGELOG.md).
+Full history: [CHANGELOG.md](./docs/en-US/CHANGELOG.md).
 
 ---
 
 ## 📝 Notes
 
-- **keepAlive()**: Required for long-running apps (servers, listeners); otherwise process exits after command.
-- **Color support**: Auto-detects terminal color support; disabled in non-TTY or Docker.
+- **keepAlive()**: Required for long-running apps (servers, listeners);
+  otherwise process exits after command.
+- **Color support**: Auto-detects terminal color support; disabled in non-TTY or
+  Docker.
 - **CJK support**: Help supports CJK; CJK chars count as 2 display width.
 - **Option formats**: `--option`, `-o`, `--option=value`, `--option value`.
-- **Type conversion**: Option values auto-converted by `type` (string, number, boolean, array).
+- **Type conversion**: Option values auto-converted by `type` (string, number,
+  boolean, array).
 - **Validation**: Option/argument validation, conflict detection, dependencies.
 
 ---
@@ -645,7 +746,7 @@ Issues and Pull Requests welcome!
 
 ## 📄 License
 
-MIT License - see [LICENSE.md](./LICENSE.md)
+Apache License 2.0 - see [LICENSE](./LICENSE)
 
 ---
 

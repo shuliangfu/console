@@ -273,15 +273,18 @@ export class Command {
     // 检查是否请求帮助（在子命令检查之后）
     if (args.includes("--help") || args.includes("-h")) {
       this.showHelp();
+      if (!this.isKeepAlive) exit(0);
       return;
     }
 
-    // 检查是否请求版本
+    // 检查是否请求版本（打印后显式退出，避免进程挂起）
     if (args.includes("--version") || args.includes("-v")) {
       if (this.version) {
         console.log(this.version);
+        exit(0);
       } else {
         outputError("未设置版本号");
+        exit(1);
       }
       return;
     }
