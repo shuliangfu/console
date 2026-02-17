@@ -28,9 +28,7 @@ export type {
   OptionValueType,
   ParsedOptions,
 } from "./types.ts";
-import { $t, ensureConsoleI18n, type Locale } from "./i18n.ts";
-
-ensureConsoleI18n();
+import { $t, type Locale } from "./i18n.ts";
 
 /**
  * 命令行命令类

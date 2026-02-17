@@ -712,11 +712,11 @@ bun test tests/mod.test.ts
 
 ## 📋 变更日志
 
-### [1.0.9] - 2026-02-17
+### [1.0.10] - 2026-02-17
 
-**新增**：命令行文案 i18n（command、help、parser、prompt、table），zh-CN/en-US；
-支持 `lang` 选项与环境检测。**变更**：仅在显式传入 `lang` 时设置
-`LANGUAGE`；帮助变量重命名；确认提示固定 Y/n。
+**变更**：i18n 仅在入口初始化（mod 中调用 `initConsoleI18n()`）；`$t()`
+内不再执行 ensure/init；从 command、help、table、prompt、parser 中移除冗余
+ensure 调用。
 
 完整历史详见 [CHANGELOG.md](./CHANGELOG.md)。
 

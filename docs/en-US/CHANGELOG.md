@@ -10,6 +10,17 @@ and this project adheres to
 
 ---
 
+## [1.0.10] - 2026-02-17
+
+### Changed
+
+- **i18n**: Init at entry only; `initConsoleI18n()` is called once in `mod.ts`.
+  `$t()` no longer calls `ensureConsoleI18n()` or sets locale internally.
+  Removed redundant `ensureConsoleI18n()` from command, help, table, prompt, and
+  parser modules.
+
+---
+
 ## [1.0.9] - 2026-02-17
 
 ### Added

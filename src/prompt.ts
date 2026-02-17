@@ -4,10 +4,8 @@
  */
 
 import { colors } from "./ansi.ts";
-import { $t, ensureConsoleI18n } from "./i18n.ts";
+import { $t } from "./i18n.ts";
 import { error } from "./output.ts";
-
-ensureConsoleI18n();
 import {
   exit,
   isStdinTerminal,

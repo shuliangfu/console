@@ -4,11 +4,9 @@
  * @fileoverview 命令行参数解析器
  */
 
-import { $t, ensureConsoleI18n } from "./i18n.ts";
+import { $t } from "./i18n.ts";
 import { error as outputError } from "./output.ts";
 import { exit } from "./runtime-utils.ts";
-
-ensureConsoleI18n();
 import type {
   CommandArgument,
   CommandOption,

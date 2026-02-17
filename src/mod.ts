@@ -3,6 +3,11 @@
  * 统一导出所有控制台相关功能
  */
 
+import { initConsoleI18n } from "./i18n.ts";
+
+// 入口处初始化控制台 i18n（加载翻译并设置当前 locale，$t 内不再做 ensure/init）
+initConsoleI18n();
+
 // ANSI 颜色和格式化工具
 export * from "./ansi.ts";
 

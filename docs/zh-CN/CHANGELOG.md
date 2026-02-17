@@ -9,6 +9,17 @@
 
 ---
 
+## [1.0.10] - 2026-02-17
+
+### 变更
+
+- **i18n**：仅在入口初始化；`mod.ts` 中调用一次 `initConsoleI18n()`。`$t()`
+  内不再调用 `ensureConsoleI18n()` 或设置 locale。从
+  command、help、table、prompt、parser 模块中移除冗余的 `ensureConsoleI18n()`
+  调用。
+
+---
+
 ## [1.0.9] - 2026-02-17
 
 ### 新增

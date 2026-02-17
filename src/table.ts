@@ -4,10 +4,8 @@
  */
 
 import { colors } from "./ansi.ts";
-import { $t, ensureConsoleI18n } from "./i18n.ts";
+import { $t } from "./i18n.ts";
 import { writeStdoutSync } from "./runtime-utils.ts";
-
-ensureConsoleI18n();
 
 /**
  * 表格列定义

@@ -8,9 +8,7 @@ import { cwd, IS_BUN, IS_DENO } from "@dreamer/runtime-adapter";
 import { colors } from "./ansi.ts";
 import { exit } from "./runtime-utils.ts";
 import type { CommandArgument, CommandOption } from "./types.ts";
-import { $t, ensureConsoleI18n } from "./i18n.ts";
-
-ensureConsoleI18n();
+import { $t } from "./i18n.ts";
 
 /** showHelp 的配置类型 */
 export interface HelpConfig {
