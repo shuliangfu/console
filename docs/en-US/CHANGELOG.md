@@ -10,6 +10,14 @@ and this project adheres to
 
 ---
 
+## [1.0.8] - 2026-02-17
+
+### Changed
+
+- JSR release: version bump and changelog sync for publish.
+
+---
+
 ## [1.0.7] - 2026-02-17
 
 ### Fixed

@@ -714,11 +714,9 @@ Coverage:
 
 ## 📋 Changelog
 
-### [1.0.7] - 2026-02-17
+### [1.0.8] - 2026-02-17
 
-**Fixed**: CLI exits after `-v`/`--version` and `--help` (no longer hangs).
-**Changed**: License updated to Apache 2.0; docs reorganized to `docs/en-US` and
-`docs/zh-CN`; links and zh-CN TEST_REPORT updated.
+**Changed**: JSR release; version and changelog sync for publish.
 
 Full history: [CHANGELOG.md](./docs/en-US/CHANGELOG.md).
 

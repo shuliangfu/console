@@ -712,11 +712,9 @@ bun test tests/mod.test.ts
 
 ## 📋 变更日志
 
-### [1.0.7] - 2026-02-17
+### [1.0.8] - 2026-02-17
 
-**修复**：`-v`/`--version` 与 `--help` 打印后 CLI 正常退出，不再挂起。
-**变更**：许可证变更为 Apache 2.0；文档调整至
-`docs/en-US`、`docs/zh-CN`，链接与中文测试报告已更新。
+**变更**：JSR 发布；版本号与变更日志同步。
 
 完整历史详见 [CHANGELOG.md](./CHANGELOG.md)。
 
