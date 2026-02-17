@@ -4,7 +4,10 @@
  */
 
 import { colors } from "./ansi.ts";
+import { $t, ensureConsoleI18n } from "./i18n.ts";
 import { error } from "./output.ts";
+
+ensureConsoleI18n();
 import {
   exit,
   isStdinTerminal,
@@ -213,8 +216,11 @@ export async function prompt(
   const encoder = new TextEncoder();
   const defaultVal = options?.default;
   const timeoutMs = options?.timeoutMs;
+  const defaultLabel = defaultVal != null
+    ? $t("prompt.defaultLabel", { defaultVal: String(defaultVal) })
+    : "";
   const displayMessage = defaultVal != null
-    ? `${message}${colors.dim} (默认: ${defaultVal})${colors.reset}`
+    ? `${message}${colors.dim} ${defaultLabel}${colors.reset}`
     : message;
   const formattedMessage =
     `${colors.cyan}${colors.bright}❯${colors.reset} ${colors.dim}${displayMessage}${colors.reset}`;
@@ -328,6 +334,7 @@ export async function confirm(
   message: string,
   defaultValue = false,
 ): Promise<boolean> {
+  // Y/n、y/N 为 CLI 通用约定，不翻译
   const defaultText = defaultValue ? "Y/n" : "y/N";
   const input = await prompt(`${message} (${defaultText}): `);
 
@@ -358,7 +365,7 @@ export async function input(
 
     if (!value || value.trim() === "") {
       if (required) {
-        error("此项为必填项，请输入");
+        error($t("prompt.required"));
         continue;
       }
       return options?.default ?? "";
@@ -386,22 +393,29 @@ export async function input(
  * @returns 用户输入的密码
  */
 export async function inputPassword(
-  message = "请输入密码：",
+  message?: string,
   minLength = 8,
-  confirmMessage = "请再次输入密码：",
+  confirmMessage?: string,
 ): Promise<string> {
+  const msg = message ?? $t("prompt.passwordPrompt");
+  const confirmMsg = confirmMessage ?? $t("prompt.passwordConfirm");
   while (true) {
-    const password = await prompt(`${message}（至少 ${minLength} 位）`, true);
+    const passwordHint = $t("prompt.passwordMinLength", {
+      minLength: String(minLength),
+    });
+    const password = await prompt(`${msg}${passwordHint}`, true);
 
     if (!password || password.length < minLength) {
-      error(`密码不能为空且长度至少 ${minLength} 位`);
+      error(
+        $t("prompt.passwordEmptyOrShort", { minLength: String(minLength) }),
+      );
       continue;
     }
 
-    const confirmPassword = await prompt(confirmMessage, true);
+    const confirmPassword = await prompt(confirmMsg, true);
 
     if (password !== confirmPassword) {
-      error("两次输入的密码不一致，请重新输入");
+      error($t("prompt.passwordMismatch"));
       continue;
     }
 
@@ -416,16 +430,17 @@ export async function inputPassword(
  * @returns 用户输入的邮箱
  */
 export async function inputEmail(
-  message = "请输入邮箱：",
+  message?: string,
   required = true,
 ): Promise<string> {
+  const msg = message ?? $t("prompt.emailPrompt");
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   return await input(
-    message,
+    msg,
     (value) => {
       if (!emailRegex.test(value)) {
-        return "邮箱格式不正确";
+        return $t("prompt.emailInvalid");
       }
       return null;
     },
@@ -442,24 +457,25 @@ export async function inputEmail(
  * @returns 用户输入的用户名
  */
 export async function inputUsername(
-  message = "请输入用户名：",
+  message?: string,
   minLength = 3,
   maxLength = 50,
   required = true,
 ): Promise<string> {
+  const msg = message ?? $t("prompt.usernamePrompt");
   const usernameRegex = /^[a-zA-Z0-9_]+$/;
 
   return await input(
-    message,
+    msg,
     (value) => {
       if (value.length < minLength) {
-        return `用户名长度至少 ${minLength} 个字符`;
+        return $t("prompt.usernameMinLength", { minLength: String(minLength) });
       }
       if (value.length > maxLength) {
-        return `用户名长度不能超过 ${maxLength} 个字符`;
+        return $t("prompt.usernameMaxLength", { maxLength: String(maxLength) });
       }
       if (!usernameRegex.test(value)) {
-        return "用户名只能包含字母、数字和下划线";
+        return $t("prompt.usernameInvalid");
       }
       return null;
     },
@@ -486,7 +502,7 @@ export async function inputNumber(
 
     if (!value || value.trim() === "") {
       if (required) {
-        error("此项为必填项，请输入数字");
+        error($t("prompt.numberRequired"));
         continue;
       }
       return NaN;
@@ -495,17 +511,17 @@ export async function inputNumber(
     const num = Number(value.trim());
 
     if (isNaN(num)) {
-      error("请输入有效的数字");
+      error($t("prompt.numberInvalid"));
       continue;
     }
 
     if (min !== undefined && num < min) {
-      error(`数字不能小于 ${min}`);
+      error($t("prompt.numberMin", { min: String(min) }));
       continue;
     }
 
     if (max !== undefined && num > max) {
-      error(`数字不能大于 ${max}`);
+      error($t("prompt.numberMax", { max: String(max) }));
       continue;
     }
 
@@ -537,24 +553,27 @@ export async function select(
   });
 
   while (true) {
-    const input = await prompt(
-      `\n请选择 (1-${options.length}${
-        defaultValue !== undefined ? `, 默认: ${defaultValue + 1}` : ""
-      }): `,
-    );
+    const max = options.length;
+    const promptText = defaultValue !== undefined
+      ? $t("prompt.selectPromptDefault", {
+        max: String(max),
+        default: String(defaultValue + 1),
+      })
+      : $t("prompt.selectPromptRange", { max: String(max) });
+    const input = await prompt(`\n${promptText}`);
 
     if (!input || input.trim() === "") {
       if (defaultValue !== undefined) {
         return defaultValue;
       }
-      error("请选择一个选项");
+      error($t("prompt.selectChooseOne"));
       continue;
     }
 
     const num = Number(input.trim());
 
     if (isNaN(num) || num < 1 || num > options.length) {
-      error(`请输入 1-${options.length} 之间的数字`);
+      error($t("prompt.selectRange", { max: String(options.length) }));
       continue;
     }
 
@@ -582,17 +601,20 @@ export async function multiSelect(
     console.log(`  ${colors.dim}[${index + 1}]${colors.reset} ${option}`);
   });
 
-  const maxText = max ? `，最多 ${max} 个` : "";
-  const minText = min > 0 ? `，至少 ${min} 个` : "";
+  const maxText = max ? $t("prompt.multiSelectMax", { max: String(max) }) : "";
+  const minText = min > 0
+    ? $t("prompt.multiSelectMin", { min: String(min) })
+    : "";
 
   while (true) {
-    const input = await prompt(`\n请选择（用逗号分隔${minText}${maxText}）: `);
+    const promptText = $t("prompt.multiSelectPrompt", { minText, maxText });
+    const input = await prompt(`\n${promptText}`);
 
     if (!input || input.trim() === "") {
       if (min === 0) {
         return [];
       }
-      error("请至少选择一个选项");
+      error($t("prompt.multiSelectAtLeastOne"));
       continue;
     }
 
@@ -602,7 +624,7 @@ export async function multiSelect(
     );
 
     if (indices.length === 0) {
-      error("请选择有效的选项");
+      error($t("prompt.multiSelectValid"));
       continue;
     }
 
@@ -610,12 +632,12 @@ export async function multiSelect(
     const uniqueIndices = [...new Set(indices)].map((n) => n - 1);
 
     if (uniqueIndices.length < min) {
-      error(`至少需要选择 ${min} 个选项`);
+      error($t("prompt.multiSelectMinCount", { min: String(min) }));
       continue;
     }
 
     if (max !== undefined && uniqueIndices.length > max) {
-      error(`最多只能选择 ${max} 个选项`);
+      error($t("prompt.multiSelectMaxCount", { max: String(max) }));
       continue;
     }
 
@@ -627,8 +649,9 @@ export async function multiSelect(
  * 等待用户按键继续
  * @param message 提示信息
  */
-export async function pause(message = "按 Enter 键继续..."): Promise<void> {
-  await prompt(message);
+export async function pause(message?: string): Promise<void> {
+  const msg = message ?? $t("prompt.pauseDefault");
+  await prompt(msg);
 }
 
 /**
@@ -669,7 +692,7 @@ export async function interactiveMenu(
     });
 
     console.log(
-      `\n${colors.dim}使用 ↑↓ 键选择，Enter 确认，Esc 取消${colors.reset}`,
+      `\n${colors.dim}${$t("prompt.menuHint")}${colors.reset}`,
     );
   };
 
@@ -764,7 +787,7 @@ export async function interactiveMenu(
   } catch (_err) {
     // 如果原始模式不支持，回退到普通选择
     console.log(
-      `\n${colors.yellow}警告: 不支持交互式菜单，使用普通选择模式${colors.reset}\n`,
+      `\n${colors.yellow}${$t("prompt.menuFallback")}${colors.reset}\n`,
     );
     return await select(message, options, defaultValue);
   }
@@ -811,10 +834,15 @@ export async function interactiveMultiMenu(
         : `    ${check} ${colors.dim}${option}${colors.reset}`;
       console.log(line);
     });
-    const minText = min > 0 ? `，至少 ${min} 项` : "";
-    const maxText = max != null ? `，最多 ${max} 项` : "";
+    const minText = min > 0
+      ? $t("prompt.multiMenuMin", { min: String(min) })
+      : "";
+    const maxText = max != null
+      ? $t("prompt.multiMenuMax", { max: String(max) })
+      : "";
+    const hint = $t("prompt.multiMenuHint");
     console.log(
-      `\n${colors.dim}空格勾选/取消，↑↓ 移动，Enter 确认${minText}${maxText}${colors.reset}`,
+      `\n${colors.dim}${hint}${minText}${maxText}${colors.reset}`,
     );
   };
 
@@ -938,10 +966,12 @@ export async function interactiveMenuSearch(
     writeStdoutSync(encoder.encode("\r\x1b[K"));
     console.log(`${colors.cyan}${colors.bright}${message}${colors.reset}\n`);
     if (search) {
-      console.log(`${colors.dim}筛选: ${search}${colors.reset}\n`);
+      const filterLabel = $t("prompt.searchFilter");
+      console.log(`${colors.dim}${filterLabel}${search}${colors.reset}\n`);
     }
+    const noMatchText = $t("prompt.searchNoMatch");
     const toShow = filteredIndices.length === 0
-      ? [{ index: -1, text: "（无匹配）" }]
+      ? [{ index: -1, text: noMatchText }]
       : filteredIndices.map((i) => ({ index: i, text: options[i] }));
     toShow.forEach(({ index, text }) => {
       const isSel = index === selectedIndex;
@@ -950,8 +980,9 @@ export async function interactiveMenuSearch(
         : `    ${colors.dim}${text}${colors.reset}`;
       console.log(line);
     });
+    const searchHint = $t("prompt.searchHint");
     console.log(
-      `\n${colors.dim}输入过滤，↑↓ 选择，Enter 确认，Esc 取消${colors.reset}`,
+      `\n${colors.dim}${searchHint}${colors.reset}`,
     );
   };
 

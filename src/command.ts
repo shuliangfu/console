@@ -9,7 +9,7 @@
 import { CommandHelpGenerator } from "./help.ts";
 import { error as outputError, warning } from "./output.ts";
 import { CommandParser } from "./parser.ts";
-import { exit, getArgs } from "./runtime-utils.ts";
+import { exit, getArgs, setEnv } from "./runtime-utils.ts";
 import type {
   CommandArgument,
   CommandHandler,
@@ -28,6 +28,9 @@ export type {
   OptionValueType,
   ParsedOptions,
 } from "./types.ts";
+import { $t, ensureConsoleI18n, type Locale } from "./i18n.ts";
+
+ensureConsoleI18n();
 
 /**
  * 命令行命令类
@@ -61,15 +64,27 @@ export class Command {
   private subcommands: Map<string, Command> = new Map();
   /** 子命令别名映射 */
   private subcommandAliases: Map<string, string> = new Map();
+  /** 输出与帮助使用的语言（不传则自动检测环境） */
+  private lang?: Locale;
 
   /**
    * 创建命令实例
    * @param name 命令名称
    * @param description 命令描述（可选，可通过 info() 方法设置）
+   * @param options 可选配置，如 lang 指定语言（不传则按环境检测）
    */
-  constructor(name: string, description?: string) {
+  constructor(
+    name: string,
+    description?: string,
+    options?: { lang?: Locale },
+  ) {
     this.name = name;
     this.description = description;
+    this.lang = options?.lang;
+    // 仅当用户显式指定 lang 时写入环境变量，避免覆盖系统 LANGUAGE 及多 Command 互相覆盖
+    if (this.lang !== undefined) {
+      setEnv("LANGUAGE", this.lang);
+    }
   }
 
   /**
@@ -208,7 +223,9 @@ export class Command {
    */
   subcommandAlias(alias: string, commandName: string): this {
     if (!this.subcommands.has(commandName)) {
-      throw new Error(`子命令 "${commandName}" 不存在`);
+      throw new Error(
+        $t("command.subcommandNotFound", { name: commandName }, this.lang),
+      );
     }
     this.subcommandAliases.set(alias, commandName);
     return this;
@@ -283,7 +300,7 @@ export class Command {
         console.log(this.version);
         exit(0);
       } else {
-        outputError("未设置版本号");
+        outputError($t("command.versionNotSet", undefined, this.lang));
         exit(1);
       }
       return;
@@ -316,14 +333,14 @@ export class Command {
           await this.afterHook(parsedArgs, parsedOptions);
         }
       } catch (err) {
-        // 记录错误并退出
+        const message = err instanceof Error ? err.message : String(err);
         outputError(
-          `执行命令时出错: ${err instanceof Error ? err.message : String(err)}`,
+          $t("command.executeError", { message }, this.lang),
         );
         exit(1);
       }
     } else {
-      warning("命令未设置处理函数");
+      warning($t("command.noHandler", undefined, this.lang));
       this.showHelp();
     }
 

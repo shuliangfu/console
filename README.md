@@ -714,9 +714,11 @@ Coverage:
 
 ## 📋 Changelog
 
-### [1.0.8] - 2026-02-17
+### [1.0.9] - 2026-02-17
 
-**Changed**: JSR release; version and changelog sync for publish.
+**Added**: i18n for CLI (command, help, parser, prompt, table) with zh-CN/en-US;
+`lang` option and env-based detection. **Changed**: Set `LANGUAGE` only when
+`lang` is explicit; help var rename; confirm uses literal Y/n.
 
 Full history: [CHANGELOG.md](./docs/en-US/CHANGELOG.md).
 

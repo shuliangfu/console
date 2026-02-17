@@ -9,6 +9,25 @@
 
 ---
 
+## [1.0.9] - 2026-02-17
+
+### 新增
+
+- **i18n**：命令行文案（command、help、parser、prompt、table）完整国际化，支持
+  zh-CN 与 en-US；`new Command(name, desc, { lang: "en-US" })` 可指定语言，未传
+  `lang` 时按环境检测。
+- **parser**：参数校验错误文案使用 `argumentValueInvalid` locale 键。
+- **table**：空表格与键值表表头使用 `noData`、`keyHeader`、`valueHeader`。
+
+### 变更
+
+- **command**：仅在显式传入 `lang` 时设置 `LANGUAGE`，未传时不再改写环境变量。
+- **help**：`ungroupedOptions` 重命名为 `ungroupedOpts`，避免 i18n-ally 误匹配
+  "Options"。
+- **prompt**：确认提示固定使用 `Y/n`、`y/N`，不参与翻译。
+
+---
+
 ## [1.0.8] - 2026-02-17
 
 ### 变更

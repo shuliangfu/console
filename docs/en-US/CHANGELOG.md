@@ -10,6 +10,29 @@ and this project adheres to
 
 ---
 
+## [1.0.9] - 2026-02-17
+
+### Added
+
+- **i18n**: Full internationalization for CLI messages (command, help, parser,
+  prompt, table) with zh-CN and en-US locales;
+  `new Command(name, desc, {
+  lang: "en-US" })` and env-based detection when
+  `lang` is omitted.
+- **parser**: `argumentValueInvalid` locale key for argument validation errors.
+- **table**: `noData`, `keyHeader`, `valueHeader` for empty table and key-value
+  table headers.
+
+### Changed
+
+- **command**: Set `LANGUAGE` only when `lang` is explicitly passed; no longer
+  overwrites env when omitted.
+- **help**: Renamed `ungroupedOptions` to `ungroupedOpts` to avoid i18n-ally
+  false match on "Options".
+- **prompt**: Confirm prompt uses literal `Y/n` / `y/N` (not translated).
+
+---
+
 ## [1.0.8] - 2026-02-17
 
 ### Changed

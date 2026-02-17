@@ -4,7 +4,10 @@
  */
 
 import { colors } from "./ansi.ts";
+import { $t, ensureConsoleI18n } from "./i18n.ts";
 import { writeStdoutSync } from "./runtime-utils.ts";
+
+ensureConsoleI18n();
 
 /**
  * 表格列定义
@@ -224,7 +227,7 @@ export function table(
   options: TableOptions = {},
 ): void {
   if (data.length === 0) {
-    console.log(colors.dim + "（无数据）" + colors.reset);
+    console.log(colors.dim + $t("table.noData") + colors.reset);
     return;
   }
 
@@ -303,8 +306,8 @@ export function keyValueTable(
   }));
 
   table(rows, [
-    { header: "键", width: 20, align: "left" },
-    { header: "值", width: 0, align: "left" },
+    { header: $t("table.keyHeader"), width: 20, align: "left" },
+    { header: $t("table.valueHeader"), width: 0, align: "left" },
   ], options);
 }
 

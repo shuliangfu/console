@@ -8,6 +8,9 @@ import { cwd, IS_BUN, IS_DENO } from "@dreamer/runtime-adapter";
 import { colors } from "./ansi.ts";
 import { exit } from "./runtime-utils.ts";
 import type { CommandArgument, CommandOption } from "./types.ts";
+import { $t, ensureConsoleI18n } from "./i18n.ts";
+
+ensureConsoleI18n();
 
 /** showHelp 的配置类型 */
 export interface HelpConfig {
@@ -83,8 +86,8 @@ export class CommandHelpGenerator {
 
     // 需要值
     if (opt.requiresValue) {
-      // " <值>" 需要整体计算宽度（考虑中文字符）
-      length += this.calculateDisplayWidth(" <值>");
+      const valuePh = $t("help.valuePlaceholder");
+      length += this.calculateDisplayWidth(` <${valuePh}>`);
     }
 
     // 可选值
@@ -115,7 +118,7 @@ export class CommandHelpGenerator {
     optionStr += `${colors.cyan}--${opt.name}${colors.reset}`;
 
     if (opt.requiresValue) {
-      optionStr += ` <值>`;
+      optionStr += ` <${$t("help.valuePlaceholder")}>`;
     }
 
     // 显示可选值
@@ -132,7 +135,9 @@ export class CommandHelpGenerator {
     optionStr += opt.description;
 
     if (opt.defaultValue !== undefined) {
-      optionStr += ` ${colors.dim}(默认: ${opt.defaultValue})${colors.reset}`;
+      const defaultLabel = $t("help.default");
+      optionStr +=
+        ` ${colors.dim}(${defaultLabel}: ${opt.defaultValue})${colors.reset}`;
     }
 
     console.log(optionStr);
@@ -158,7 +163,7 @@ export class CommandHelpGenerator {
     }
 
     // 显示用法
-    console.log(`${colors.dim}用法:${colors.reset}`);
+    console.log(`${colors.dim}${$t("help.usage")}:${colors.reset}`);
 
     // 如果设置了自定义用法，直接使用
     if (config.usage) {
@@ -169,7 +174,7 @@ export class CommandHelpGenerator {
 
       // 如果有子命令，添加子命令提示
       if (config.subcommands.size > 0) {
-        usage += " <command>";
+        usage += ` <${$t("help.commandPlaceholder")}>`;
       }
 
       // 添加选项
@@ -178,7 +183,7 @@ export class CommandHelpGenerator {
       );
       const requiredOptions = config.options.filter((opt) => opt.requiresValue);
       if (optionalOptions.length > 0 || requiredOptions.length > 0) {
-        usage += " [选项]";
+        usage += ` [${$t("help.optionsPlaceholder")}]`;
       }
 
       // 添加参数
@@ -195,7 +200,7 @@ export class CommandHelpGenerator {
 
     // 显示参数
     if (config.arguments.length > 0) {
-      console.log(`${colors.dim}参数:${colors.reset}`);
+      console.log(`${colors.dim}${$t("help.arguments")}:${colors.reset}`);
       for (const arg of config.arguments) {
         const required = arg.required ? `${colors.red}*${colors.reset} ` : "  ";
         let argStr = `  ${required}${colors.cyan}${arg.name}${colors.reset}`;
@@ -219,7 +224,7 @@ export class CommandHelpGenerator {
     if (config.options.length > 0) {
       // 按分组组织选项
       const groupedOptions = new Map<string, CommandOption[]>();
-      const ungroupedOptions: CommandOption[] = [];
+      const ungroupedOpts: CommandOption[] = [];
 
       for (const opt of config.options) {
         if (opt.group) {
@@ -228,7 +233,7 @@ export class CommandHelpGenerator {
           }
           groupedOptions.get(opt.group)!.push(opt);
         } else {
-          ungroupedOptions.push(opt);
+          ungroupedOpts.push(opt);
         }
       }
 
@@ -242,7 +247,7 @@ export class CommandHelpGenerator {
           );
         }
       }
-      for (const opt of ungroupedOptions) {
+      for (const opt of ungroupedOpts) {
         maxOptionLength = Math.max(
           maxOptionLength,
           this.calculateOptionDisplayLength(opt),
@@ -261,13 +266,14 @@ export class CommandHelpGenerator {
       }
 
       // 显示未分组选项
-      if (ungroupedOptions.length > 0) {
+      const optionsLabel = $t("help.options");
+      if (ungroupedOpts.length > 0) {
         if (groupedOptions.size > 0) {
-          console.log(`${colors.dim}选项:${colors.reset}`);
+          console.log(`${colors.dim}${optionsLabel}:${colors.reset}`);
         } else {
-          console.log(`${colors.dim}选项:${colors.reset}`);
+          console.log(`${colors.dim}${optionsLabel}:${colors.reset}`);
         }
-        for (const opt of ungroupedOptions) {
+        for (const opt of ungroupedOpts) {
           this.printOption(opt, maxOptionLength);
         }
         console.log();
@@ -276,7 +282,7 @@ export class CommandHelpGenerator {
 
     // 显示使用示例
     if (config.examples.length > 0) {
-      console.log(`${colors.dim}示例:${colors.reset}`);
+      console.log(`${colors.dim}${$t("help.examples")}:${colors.reset}`);
 
       // 计算所有示例命令的最大显示宽度（用于对齐描述）
       let maxCommandWidth = 0;
@@ -306,7 +312,7 @@ export class CommandHelpGenerator {
 
     // 显示子命令
     if (config.subcommands.size > 0) {
-      console.log(`${colors.dim}子命令:${colors.reset}`);
+      console.log(`${colors.dim}${$t("help.subcommands")}:${colors.reset}`);
 
       // 计算最长的子命令显示长度（含别名），用于对齐
       let maxNameLength = 0;
@@ -370,10 +376,13 @@ export class CommandHelpGenerator {
 
           // 如果还有更多选项，显示提示
           if (cmd.options.length > 5) {
+            const moreText = $t("help.moreOptions", {
+              count: cmd.options.length - 5,
+            });
             console.log(
-              `${" ".repeat(optionIndent)}${colors.dim}... 还有 ${
-                cmd.options.length - 5
-              } 个选项${colors.reset}`,
+              `${
+                " ".repeat(optionIndent)
+              }${colors.dim}${moreText}${colors.reset}`,
             );
           }
         }
@@ -434,32 +443,39 @@ export class CommandHelpGenerator {
         // 例如：如果子命令是 "build"，则生成 "deno run -A src/cli.ts build --help" 或 "bun run src/cli.ts build --help"
         let commandPrefix = `${scriptPath} ${firstSubcommand} --help`;
         if (config.usage) {
-          // 从 usage 中提取命令前缀，替换 <command> 为实际子命令，替换 [选项] 为 --help
+          const cmdPh = $t("help.commandPlaceholder");
+          const optPh = $t("help.optionsPlaceholder");
           const firstLine = config.usage.split("\n")[0].trim();
-          // 如果 usage 中已经包含运行时命令，则直接使用；否则添加脚本路径
           if (firstLine.includes("deno run") || firstLine.includes("bun run")) {
             commandPrefix = firstLine
-              .replace(/<command>/g, firstSubcommand)
-              .replace(/\[选项\]/g, "--help");
+              .replace(new RegExp(`<${cmdPh}>`, "g"), firstSubcommand)
+              .replace(new RegExp(`\\[${optPh}\\]`, "g"), "--help");
           } else {
             commandPrefix = `${scriptPath} ${firstLine}`
-              .replace(/<command>/g, firstSubcommand)
-              .replace(/\[选项\]/g, "--help");
+              .replace(new RegExp(`<${cmdPh}>`, "g"), firstSubcommand)
+              .replace(new RegExp(`\\[${optPh}\\]`, "g"), "--help");
           }
         }
+        const hintExample = $t("help.hintSubcommandExample");
         console.log(
-          `${colors.dim}提示: 查看子命令详细帮助，例如: ${colors.reset}${colors.cyan}${commandPrefix}${colors.reset}\n`,
+          `${colors.dim}${hintExample}${colors.reset}${colors.cyan}${commandPrefix}${colors.reset}\n`,
         );
       } else {
+        const hintShort = $t("help.hintSubcommandShort");
+        const hintSuffix = $t("help.hintSubcommandShortSuffix");
+        const cmdPh = $t("help.commandPlaceholder");
         console.log(
-          `${colors.dim}提示: 使用 ${colors.reset}${colors.cyan}<command> --help${colors.reset}${colors.dim} 查看子命令的详细选项${colors.reset}\n`,
+          `${colors.dim}${hintShort}${colors.reset}${colors.cyan}<${cmdPh}> --help${colors.reset}${colors.dim}${hintSuffix}${colors.reset}\n`,
         );
       }
     }
 
     // 显示版本
     if (config.version) {
-      console.log(`${colors.dim}版本:${colors.reset} ${config.version}\n`);
+      const versionLabel = $t("help.version");
+      console.log(
+        `${colors.dim}${versionLabel}:${colors.reset} ${config.version}\n`,
+      );
     }
 
     // 显示完帮助信息后退出程序

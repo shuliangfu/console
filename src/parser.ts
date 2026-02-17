@@ -4,8 +4,11 @@
  * @fileoverview 命令行参数解析器
  */
 
+import { $t, ensureConsoleI18n } from "./i18n.ts";
 import { error as outputError } from "./output.ts";
 import { exit } from "./runtime-utils.ts";
+
+ensureConsoleI18n();
 import type {
   CommandArgument,
   CommandOption,
@@ -38,7 +41,7 @@ export class CommandParser {
     if (type === "number") {
       const num = Number(value);
       if (isNaN(num)) {
-        throw new Error(`无法将 "${value}" 转换为数字`);
+        throw new Error($t("parser.cannotConvertToNumber", { value }));
       }
       return num;
     }
@@ -64,9 +67,10 @@ export class CommandParser {
     // 检查枚举值
     if (option.choices && option.choices.length > 0) {
       if (!option.choices.includes(value)) {
-        return `选项 --${option.name} 的值必须是以下之一: ${
-          option.choices.join(", ")
-        }`;
+        return $t("parser.optionChoiceMustBe", {
+          name: option.name,
+          choices: option.choices.join(", "),
+        });
       }
     }
 
@@ -74,7 +78,7 @@ export class CommandParser {
     if (option.validator) {
       const result = option.validator(value);
       if (result !== true) {
-        return result || `选项 --${option.name} 的值无效`;
+        return result || $t("parser.optionValueInvalid", { name: option.name });
       }
     }
 
@@ -94,9 +98,10 @@ export class CommandParser {
     // 检查枚举值
     if (argument.choices && argument.choices.length > 0) {
       if (!argument.choices.includes(value)) {
-        return `参数 ${argument.name} 的值必须是以下之一: ${
-          argument.choices.join(", ")
-        }`;
+        return $t("parser.argumentChoiceMustBe", {
+          name: argument.name,
+          choices: argument.choices.join(", "),
+        });
       }
     }
 
@@ -104,7 +109,8 @@ export class CommandParser {
     if (argument.validator) {
       const result = argument.validator(value);
       if (result !== true) {
-        return result || `参数 ${argument.name} 的值无效`;
+        return result ||
+          $t("parser.argumentValueInvalid", { name: argument.name });
       }
     }
 
@@ -130,7 +136,10 @@ export class CommandParser {
         for (const conflictName of opt.conflicts) {
           if (parsedOptions[conflictName] !== undefined) {
             outputError(
-              `选项 --${opt.name} 与 --${conflictName} 冲突，不能同时使用`,
+              $t("parser.optionConflict", {
+                name: opt.name,
+                other: conflictName,
+              }),
             );
             exit(1);
           }
@@ -144,7 +153,7 @@ export class CommandParser {
         for (const depName of opt.dependsOn) {
           if (parsedOptions[depName] === undefined) {
             outputError(
-              `选项 --${opt.name} 依赖于 --${depName}，请先指定 --${depName}`,
+              $t("parser.optionDependsOn", { name: opt.name, other: depName }),
             );
             exit(1);
           }
@@ -153,7 +162,7 @@ export class CommandParser {
 
       // 检查必需选项
       if (opt.required && optionValue === undefined) {
-        outputError(`选项 --${opt.name} 是必需的`);
+        outputError($t("parser.optionRequired", { name: opt.name }));
         exit(1);
       }
     }
@@ -215,7 +224,9 @@ export class CommandParser {
               value = args[i + 1];
               i++;
             } else {
-              outputError(`选项 --${optionName} 需要值`);
+              outputError(
+                $t("parser.optionLongRequiresValue", { name: optionName }),
+              );
               exit(1);
             }
 
@@ -243,7 +254,7 @@ export class CommandParser {
             parsedOptions[optionName] = true;
           }
         } else {
-          outputError(`未知选项: ${arg}`);
+          outputError($t("parser.unknownOption", { arg }));
           exit(1);
         }
       } else if (arg.startsWith("-") && arg.length > 1) {
@@ -280,14 +291,16 @@ export class CommandParser {
 
               i++;
             } else {
-              outputError(`选项 -${optionName} 需要值`);
+              outputError(
+                $t("parser.optionShortRequiresValue", { name: optionName }),
+              );
               exit(1);
             }
           } else {
             parsedOptions[option.name] = true;
           }
         } else {
-          outputError(`未知选项: ${arg}`);
+          outputError($t("parser.unknownOption", { arg }));
           exit(1);
         }
       } else {
@@ -302,7 +315,9 @@ export class CommandParser {
     for (let j = 0; j < commandArguments.length; j++) {
       const argDef = commandArguments[j];
       if (argDef.required && j >= parsedArgs.length) {
-        outputError(`缺少必需参数: ${argDef.name}`);
+        outputError(
+          $t("parser.missingRequiredArgument", { name: argDef.name }),
+        );
         exit(1);
       }
 
