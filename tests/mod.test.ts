@@ -72,11 +72,10 @@ import type {
   CommandOption,
   ParsedOptions,
 } from "../src/types.ts";
-import { initConsoleI18n, setConsoleLocale } from "../src/i18n.ts";
+import { setConsoleLocale } from "../src/i18n.ts";
 
 describe("Console", () => {
   beforeAll(() => {
-    initConsoleI18n();
     setConsoleLocale("zh-CN");
   });
 

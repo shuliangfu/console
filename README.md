@@ -714,10 +714,9 @@ Coverage:
 
 ## 📋 Changelog
 
-**v1.0.11** (2026-02-19) – Changed: i18n `$t` → `$tr`. Fixed: `$tr` lazy-init,
-`setConsoleLocale()` for tests; tests use zh-CN in beforeAll.
-
-Full history: [CHANGELOG.md](./docs/en-US/CHANGELOG.md).
+**v1.0.12** (2026-02-19) – Changed: i18n init runs automatically in module;
+entry no longer calls init. Use `setConsoleLocale()` in tests only when
+overriding locale. Full history: [CHANGELOG.md](./docs/en-US/CHANGELOG.md).
 
 ---
 

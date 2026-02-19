@@ -3,11 +3,6 @@
  * 统一导出所有控制台相关功能
  */
 
-import { initConsoleI18n } from "./i18n.ts";
-
-// 入口处初始化控制台 i18n（不挂全局，各模块通过 import $tr 使用）
-initConsoleI18n();
-
 // ANSI 颜色和格式化工具
 export * from "./ansi.ts";
 

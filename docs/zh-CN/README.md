@@ -712,10 +712,9 @@ bun test tests/mod.test.ts
 
 ## 📋 变更日志
 
-**v1.0.11** (2026-02-19) – 变更：i18n `$t` → `$tr`。修复：`$tr`
-惰性初始化、`setConsoleLocale()` 供测试、测试 beforeAll 使用 zh-CN。
-
-完整历史详见 [CHANGELOG.md](./CHANGELOG.md)。
+**v1.0.12** (2026-02-19) – 变更：i18n 在模块加载时自动初始化，入口不再调用
+init；测试仅在需覆盖语言时使用 `setConsoleLocale()`。完整历史详见
+[CHANGELOG.md](./CHANGELOG.md)。
 
 ---
 

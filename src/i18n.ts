@@ -61,10 +61,8 @@ export function detectLocale(): Locale {
   return DEFAULT_LOCALE;
 }
 
-/**
- * 加载翻译并设置当前 locale。在入口（如 mod）调用一次；不挂全局。
- */
-export function initConsoleI18n(): void {
+/** 内部初始化，导入 i18n 时自动执行，不导出 */
+function initConsoleI18n(): void {
   if (consoleI18n) return;
   const i18n = createI18n({
     defaultLocale: DEFAULT_LOCALE,
@@ -76,10 +74,13 @@ export function initConsoleI18n(): void {
   consoleI18n = i18n;
 }
 
+initConsoleI18n();
+
 /**
- * 设置控制台当前语言（需在 initConsoleI18n 之后调用，常用于测试固定语言）。
+ * 设置控制台当前语言（常用于测试固定语言）。
  */
 export function setConsoleLocale(locale: Locale): void {
+  initConsoleI18n();
   if (consoleI18n) consoleI18n.setLocale(locale);
 }
 

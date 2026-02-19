@@ -10,6 +10,17 @@ and this project adheres to
 
 ---
 
+## [1.0.12] - 2026-02-19
+
+### Changed
+
+- **i18n**: Initialization now runs automatically when the i18n module is
+  loaded. Entry file (`mod.ts`) no longer imports or calls `initConsoleI18n`;
+  remove any such usage from your code. Tests should use `setConsoleLocale()`
+  only when overriding locale.
+
+---
+
 ## [1.0.11] - 2026-02-19
 
 ### Changed
