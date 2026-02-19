@@ -7,7 +7,7 @@
 
 [![JSR](https://jsr.io/badges/@dreamer/console)](https://jsr.io/@dreamer/console)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/tests-140%20passed%20%7C%201%20skip-brightgreen)](./TEST_REPORT.md)
+[![Tests](https://img.shields.io/badge/tests-141%20passed%20%7C%201%20ignored-brightgreen)](./TEST_REPORT.md)
 
 ---
 
@@ -712,11 +712,8 @@ bun test tests/mod.test.ts
 
 ## 📋 变更日志
 
-### [1.0.10] - 2026-02-17
-
-**变更**：i18n 仅在入口初始化（mod 中调用 `initConsoleI18n()`）；`$t()`
-内不再执行 ensure/init；从 command、help、table、prompt、parser 中移除冗余
-ensure 调用。
+**v1.0.11** (2026-02-19) – 变更：i18n `$t` → `$tr`。修复：`$tr`
+惰性初始化、`setConsoleLocale()` 供测试、测试 beforeAll 使用 zh-CN。
 
 完整历史详见 [CHANGELOG.md](./CHANGELOG.md)。
 

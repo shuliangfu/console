@@ -10,7 +10,7 @@ import {
   IS_DENO,
   platform,
 } from "@dreamer/runtime-adapter";
-import { describe, expect, it } from "@dreamer/test";
+import { beforeAll, describe, expect, it } from "@dreamer/test";
 import {
   clearLine,
   clearScreen,
@@ -72,8 +72,14 @@ import type {
   CommandOption,
   ParsedOptions,
 } from "../src/types.ts";
+import { initConsoleI18n, setConsoleLocale } from "../src/i18n.ts";
 
 describe("Console", () => {
+  beforeAll(() => {
+    initConsoleI18n();
+    setConsoleLocale("zh-CN");
+  });
+
   describe("ANSI 颜色", () => {
     it("应该提供颜色常量", () => {
       expect(typeof colors.red).toBe("string");

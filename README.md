@@ -7,7 +7,7 @@ English | [中文 (Chinese)](./docs/zh-CN/README.md)
 
 [![JSR](https://jsr.io/badges/@dreamer/console)](https://jsr.io/@dreamer/console)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/tests-140%20passed%20%7C%201%20skip-brightgreen)](./docs/en-US/TEST_REPORT.md)
+[![Tests](https://img.shields.io/badge/tests-141%20passed%20%7C%201%20ignored-brightgreen)](./docs/en-US/TEST_REPORT.md)
 
 ---
 
@@ -714,11 +714,8 @@ Coverage:
 
 ## 📋 Changelog
 
-### [1.0.10] - 2026-02-17
-
-**Changed**: i18n init at entry only (`initConsoleI18n()` in mod); `$t()` no
-longer calls ensure/init; removed redundant ensure from command, help, table,
-prompt, parser.
+**v1.0.11** (2026-02-19) – Changed: i18n `$t` → `$tr`. Fixed: `$tr` lazy-init,
+`setConsoleLocale()` for tests; tests use zh-CN in beforeAll.
 
 Full history: [CHANGELOG.md](./docs/en-US/CHANGELOG.md).
 

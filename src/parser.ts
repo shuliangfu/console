@@ -4,7 +4,7 @@
  * @fileoverview 命令行参数解析器
  */
 
-import { $t } from "./i18n.ts";
+import { $tr } from "./i18n.ts";
 import { error as outputError } from "./output.ts";
 import { exit } from "./runtime-utils.ts";
 import type {
@@ -39,7 +39,7 @@ export class CommandParser {
     if (type === "number") {
       const num = Number(value);
       if (isNaN(num)) {
-        throw new Error($t("parser.cannotConvertToNumber", { value }));
+        throw new Error($tr("parser.cannotConvertToNumber", { value }));
       }
       return num;
     }
@@ -65,7 +65,7 @@ export class CommandParser {
     // 检查枚举值
     if (option.choices && option.choices.length > 0) {
       if (!option.choices.includes(value)) {
-        return $t("parser.optionChoiceMustBe", {
+        return $tr("parser.optionChoiceMustBe", {
           name: option.name,
           choices: option.choices.join(", "),
         });
@@ -76,7 +76,8 @@ export class CommandParser {
     if (option.validator) {
       const result = option.validator(value);
       if (result !== true) {
-        return result || $t("parser.optionValueInvalid", { name: option.name });
+        return result ||
+          $tr("parser.optionValueInvalid", { name: option.name });
       }
     }
 
@@ -96,7 +97,7 @@ export class CommandParser {
     // 检查枚举值
     if (argument.choices && argument.choices.length > 0) {
       if (!argument.choices.includes(value)) {
-        return $t("parser.argumentChoiceMustBe", {
+        return $tr("parser.argumentChoiceMustBe", {
           name: argument.name,
           choices: argument.choices.join(", "),
         });
@@ -108,7 +109,7 @@ export class CommandParser {
       const result = argument.validator(value);
       if (result !== true) {
         return result ||
-          $t("parser.argumentValueInvalid", { name: argument.name });
+          $tr("parser.argumentValueInvalid", { name: argument.name });
       }
     }
 
@@ -134,7 +135,7 @@ export class CommandParser {
         for (const conflictName of opt.conflicts) {
           if (parsedOptions[conflictName] !== undefined) {
             outputError(
-              $t("parser.optionConflict", {
+              $tr("parser.optionConflict", {
                 name: opt.name,
                 other: conflictName,
               }),
@@ -151,7 +152,7 @@ export class CommandParser {
         for (const depName of opt.dependsOn) {
           if (parsedOptions[depName] === undefined) {
             outputError(
-              $t("parser.optionDependsOn", { name: opt.name, other: depName }),
+              $tr("parser.optionDependsOn", { name: opt.name, other: depName }),
             );
             exit(1);
           }
@@ -160,7 +161,7 @@ export class CommandParser {
 
       // 检查必需选项
       if (opt.required && optionValue === undefined) {
-        outputError($t("parser.optionRequired", { name: opt.name }));
+        outputError($tr("parser.optionRequired", { name: opt.name }));
         exit(1);
       }
     }
@@ -223,7 +224,7 @@ export class CommandParser {
               i++;
             } else {
               outputError(
-                $t("parser.optionLongRequiresValue", { name: optionName }),
+                $tr("parser.optionLongRequiresValue", { name: optionName }),
               );
               exit(1);
             }
@@ -252,7 +253,7 @@ export class CommandParser {
             parsedOptions[optionName] = true;
           }
         } else {
-          outputError($t("parser.unknownOption", { arg }));
+          outputError($tr("parser.unknownOption", { arg }));
           exit(1);
         }
       } else if (arg.startsWith("-") && arg.length > 1) {
@@ -290,7 +291,7 @@ export class CommandParser {
               i++;
             } else {
               outputError(
-                $t("parser.optionShortRequiresValue", { name: optionName }),
+                $tr("parser.optionShortRequiresValue", { name: optionName }),
               );
               exit(1);
             }
@@ -298,7 +299,7 @@ export class CommandParser {
             parsedOptions[option.name] = true;
           }
         } else {
-          outputError($t("parser.unknownOption", { arg }));
+          outputError($tr("parser.unknownOption", { arg }));
           exit(1);
         }
       } else {
@@ -314,7 +315,7 @@ export class CommandParser {
       const argDef = commandArguments[j];
       if (argDef.required && j >= parsedArgs.length) {
         outputError(
-          $t("parser.missingRequiredArgument", { name: argDef.name }),
+          $tr("parser.missingRequiredArgument", { name: argDef.name }),
         );
         exit(1);
       }

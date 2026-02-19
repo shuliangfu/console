@@ -10,6 +10,22 @@ and this project adheres to
 
 ---
 
+## [1.0.11] - 2026-02-19
+
+### Changed
+
+- **i18n**: Renamed translation method from `$t` to `$tr` to avoid conflict with
+  global `$t`. Update existing code to use `$tr` for package messages.
+
+### Fixed
+
+- **i18n**: `$tr` now lazy-initializes i18n when needed so messages are
+  translated even when `mod.ts` is not loaded (e.g. in tests). Added
+  `setConsoleLocale()` for tests; tests run with
+  `beforeAll(initConsoleI18n, setConsoleLocale("zh-CN"))`.
+
+---
+
 ## [1.0.10] - 2026-02-17
 
 ### Changed

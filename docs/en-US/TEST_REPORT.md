@@ -4,7 +4,7 @@
 
 - **Test library version**: @dreamer/test@^1.0.0
 - **Test framework**: @dreamer/test (compatible with Deno and Bun)
-- **Test date**: 2025-02-07
+- **Test date**: 2026-02-19
 - **Test environment**:
   - Bun 1.3.5
   - Deno 2.6+
@@ -15,8 +15,8 @@
 ### Overall Statistics
 
 - **Total tests**: 141
-- **Passed**: 140 ✅
-- **Skipped**: 1 (Windows platform specific)
+- **Passed**: 141 ✅
+- **Ignored**: 1 (Windows platform specific)
 - **Failed**: 0
 - **Pass rate**: 100% ✅
 - **Execution time**: ~1–2 s (Deno/Bun)
@@ -25,7 +25,7 @@
 
 | Test File     | Tests | Status                   | Description                                                                                                       |
 | ------------- | ----- | ------------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| `mod.test.ts` | 141   | ✅ 140 passed, 1 skipped | All feature modules, prompt subprocess tests, ANSI env vars, parseArrowKey, edge cases, mod exports, type exports |
+| `mod.test.ts` | 141   | ✅ 141 passed, 1 ignored | All feature modules, prompt subprocess tests, ANSI env vars, parseArrowKey, edge cases, mod exports, type exports |
 
 ## Feature Test Details
 

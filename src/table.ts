@@ -4,7 +4,7 @@
  */
 
 import { colors } from "./ansi.ts";
-import { $t } from "./i18n.ts";
+import { $tr } from "./i18n.ts";
 import { writeStdoutSync } from "./runtime-utils.ts";
 
 /**
@@ -225,7 +225,7 @@ export function table(
   options: TableOptions = {},
 ): void {
   if (data.length === 0) {
-    console.log(colors.dim + $t("table.noData") + colors.reset);
+    console.log(colors.dim + $tr("table.noData") + colors.reset);
     return;
   }
 
@@ -304,8 +304,8 @@ export function keyValueTable(
   }));
 
   table(rows, [
-    { header: $t("table.keyHeader"), width: 20, align: "left" },
-    { header: $t("table.valueHeader"), width: 0, align: "left" },
+    { header: $tr("table.keyHeader"), width: 20, align: "left" },
+    { header: $tr("table.valueHeader"), width: 0, align: "left" },
   ], options);
 }
 

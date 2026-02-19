@@ -8,7 +8,7 @@ import { cwd, IS_BUN, IS_DENO } from "@dreamer/runtime-adapter";
 import { colors } from "./ansi.ts";
 import { exit } from "./runtime-utils.ts";
 import type { CommandArgument, CommandOption } from "./types.ts";
-import { $t } from "./i18n.ts";
+import { $tr } from "./i18n.ts";
 
 /** showHelp 的配置类型 */
 export interface HelpConfig {
@@ -84,7 +84,7 @@ export class CommandHelpGenerator {
 
     // 需要值
     if (opt.requiresValue) {
-      const valuePh = $t("help.valuePlaceholder");
+      const valuePh = $tr("help.valuePlaceholder");
       length += this.calculateDisplayWidth(` <${valuePh}>`);
     }
 
@@ -116,7 +116,7 @@ export class CommandHelpGenerator {
     optionStr += `${colors.cyan}--${opt.name}${colors.reset}`;
 
     if (opt.requiresValue) {
-      optionStr += ` <${$t("help.valuePlaceholder")}>`;
+      optionStr += ` <${$tr("help.valuePlaceholder")}>`;
     }
 
     // 显示可选值
@@ -133,7 +133,7 @@ export class CommandHelpGenerator {
     optionStr += opt.description;
 
     if (opt.defaultValue !== undefined) {
-      const defaultLabel = $t("help.default");
+      const defaultLabel = $tr("help.default");
       optionStr +=
         ` ${colors.dim}(${defaultLabel}: ${opt.defaultValue})${colors.reset}`;
     }
@@ -161,7 +161,7 @@ export class CommandHelpGenerator {
     }
 
     // 显示用法
-    console.log(`${colors.dim}${$t("help.usage")}:${colors.reset}`);
+    console.log(`${colors.dim}${$tr("help.usage")}:${colors.reset}`);
 
     // 如果设置了自定义用法，直接使用
     if (config.usage) {
@@ -172,7 +172,7 @@ export class CommandHelpGenerator {
 
       // 如果有子命令，添加子命令提示
       if (config.subcommands.size > 0) {
-        usage += ` <${$t("help.commandPlaceholder")}>`;
+        usage += ` <${$tr("help.commandPlaceholder")}>`;
       }
 
       // 添加选项
@@ -181,7 +181,7 @@ export class CommandHelpGenerator {
       );
       const requiredOptions = config.options.filter((opt) => opt.requiresValue);
       if (optionalOptions.length > 0 || requiredOptions.length > 0) {
-        usage += ` [${$t("help.optionsPlaceholder")}]`;
+        usage += ` [${$tr("help.optionsPlaceholder")}]`;
       }
 
       // 添加参数
@@ -198,7 +198,7 @@ export class CommandHelpGenerator {
 
     // 显示参数
     if (config.arguments.length > 0) {
-      console.log(`${colors.dim}${$t("help.arguments")}:${colors.reset}`);
+      console.log(`${colors.dim}${$tr("help.arguments")}:${colors.reset}`);
       for (const arg of config.arguments) {
         const required = arg.required ? `${colors.red}*${colors.reset} ` : "  ";
         let argStr = `  ${required}${colors.cyan}${arg.name}${colors.reset}`;
@@ -264,7 +264,7 @@ export class CommandHelpGenerator {
       }
 
       // 显示未分组选项
-      const optionsLabel = $t("help.options");
+      const optionsLabel = $tr("help.options");
       if (ungroupedOpts.length > 0) {
         if (groupedOptions.size > 0) {
           console.log(`${colors.dim}${optionsLabel}:${colors.reset}`);
@@ -280,7 +280,7 @@ export class CommandHelpGenerator {
 
     // 显示使用示例
     if (config.examples.length > 0) {
-      console.log(`${colors.dim}${$t("help.examples")}:${colors.reset}`);
+      console.log(`${colors.dim}${$tr("help.examples")}:${colors.reset}`);
 
       // 计算所有示例命令的最大显示宽度（用于对齐描述）
       let maxCommandWidth = 0;
@@ -310,7 +310,7 @@ export class CommandHelpGenerator {
 
     // 显示子命令
     if (config.subcommands.size > 0) {
-      console.log(`${colors.dim}${$t("help.subcommands")}:${colors.reset}`);
+      console.log(`${colors.dim}${$tr("help.subcommands")}:${colors.reset}`);
 
       // 计算最长的子命令显示长度（含别名），用于对齐
       let maxNameLength = 0;
@@ -374,7 +374,7 @@ export class CommandHelpGenerator {
 
           // 如果还有更多选项，显示提示
           if (cmd.options.length > 5) {
-            const moreText = $t("help.moreOptions", {
+            const moreText = $tr("help.moreOptions", {
               count: cmd.options.length - 5,
             });
             console.log(
@@ -441,8 +441,8 @@ export class CommandHelpGenerator {
         // 例如：如果子命令是 "build"，则生成 "deno run -A src/cli.ts build --help" 或 "bun run src/cli.ts build --help"
         let commandPrefix = `${scriptPath} ${firstSubcommand} --help`;
         if (config.usage) {
-          const cmdPh = $t("help.commandPlaceholder");
-          const optPh = $t("help.optionsPlaceholder");
+          const cmdPh = $tr("help.commandPlaceholder");
+          const optPh = $tr("help.optionsPlaceholder");
           const firstLine = config.usage.split("\n")[0].trim();
           if (firstLine.includes("deno run") || firstLine.includes("bun run")) {
             commandPrefix = firstLine
@@ -454,14 +454,14 @@ export class CommandHelpGenerator {
               .replace(new RegExp(`\\[${optPh}\\]`, "g"), "--help");
           }
         }
-        const hintExample = $t("help.hintSubcommandExample");
+        const hintExample = $tr("help.hintSubcommandExample");
         console.log(
           `${colors.dim}${hintExample}${colors.reset}${colors.cyan}${commandPrefix}${colors.reset}\n`,
         );
       } else {
-        const hintShort = $t("help.hintSubcommandShort");
-        const hintSuffix = $t("help.hintSubcommandShortSuffix");
-        const cmdPh = $t("help.commandPlaceholder");
+        const hintShort = $tr("help.hintSubcommandShort");
+        const hintSuffix = $tr("help.hintSubcommandShortSuffix");
+        const cmdPh = $tr("help.commandPlaceholder");
         console.log(
           `${colors.dim}${hintShort}${colors.reset}${colors.cyan}<${cmdPh}> --help${colors.reset}${colors.dim}${hintSuffix}${colors.reset}\n`,
         );
@@ -470,7 +470,7 @@ export class CommandHelpGenerator {
 
     // 显示版本
     if (config.version) {
-      const versionLabel = $t("help.version");
+      const versionLabel = $tr("help.version");
       console.log(
         `${colors.dim}${versionLabel}:${colors.reset} ${config.version}\n`,
       );

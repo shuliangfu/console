@@ -28,7 +28,7 @@ export type {
   OptionValueType,
   ParsedOptions,
 } from "./types.ts";
-import { $t, type Locale } from "./i18n.ts";
+import { $tr, type Locale } from "./i18n.ts";
 
 /**
  * 命令行命令类
@@ -222,7 +222,7 @@ export class Command {
   subcommandAlias(alias: string, commandName: string): this {
     if (!this.subcommands.has(commandName)) {
       throw new Error(
-        $t("command.subcommandNotFound", { name: commandName }, this.lang),
+        $tr("command.subcommandNotFound", { name: commandName }, this.lang),
       );
     }
     this.subcommandAliases.set(alias, commandName);
@@ -298,7 +298,7 @@ export class Command {
         console.log(this.version);
         exit(0);
       } else {
-        outputError($t("command.versionNotSet", undefined, this.lang));
+        outputError($tr("command.versionNotSet", undefined, this.lang));
         exit(1);
       }
       return;
@@ -333,12 +333,12 @@ export class Command {
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         outputError(
-          $t("command.executeError", { message }, this.lang),
+          $tr("command.executeError", { message }, this.lang),
         );
         exit(1);
       }
     } else {
-      warning($t("command.noHandler", undefined, this.lang));
+      warning($tr("command.noHandler", undefined, this.lang));
       this.showHelp();
     }
 

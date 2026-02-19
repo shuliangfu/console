@@ -4,7 +4,7 @@
  */
 
 import { colors } from "./ansi.ts";
-import { $t } from "./i18n.ts";
+import { $tr } from "./i18n.ts";
 import { error } from "./output.ts";
 import {
   exit,
@@ -215,7 +215,7 @@ export async function prompt(
   const defaultVal = options?.default;
   const timeoutMs = options?.timeoutMs;
   const defaultLabel = defaultVal != null
-    ? $t("prompt.defaultLabel", { defaultVal: String(defaultVal) })
+    ? $tr("prompt.defaultLabel", { defaultVal: String(defaultVal) })
     : "";
   const displayMessage = defaultVal != null
     ? `${message}${colors.dim} ${defaultLabel}${colors.reset}`
@@ -363,7 +363,7 @@ export async function input(
 
     if (!value || value.trim() === "") {
       if (required) {
-        error($t("prompt.required"));
+        error($tr("prompt.required"));
         continue;
       }
       return options?.default ?? "";
@@ -395,17 +395,17 @@ export async function inputPassword(
   minLength = 8,
   confirmMessage?: string,
 ): Promise<string> {
-  const msg = message ?? $t("prompt.passwordPrompt");
-  const confirmMsg = confirmMessage ?? $t("prompt.passwordConfirm");
+  const msg = message ?? $tr("prompt.passwordPrompt");
+  const confirmMsg = confirmMessage ?? $tr("prompt.passwordConfirm");
   while (true) {
-    const passwordHint = $t("prompt.passwordMinLength", {
+    const passwordHint = $tr("prompt.passwordMinLength", {
       minLength: String(minLength),
     });
     const password = await prompt(`${msg}${passwordHint}`, true);
 
     if (!password || password.length < minLength) {
       error(
-        $t("prompt.passwordEmptyOrShort", { minLength: String(minLength) }),
+        $tr("prompt.passwordEmptyOrShort", { minLength: String(minLength) }),
       );
       continue;
     }
@@ -413,7 +413,7 @@ export async function inputPassword(
     const confirmPassword = await prompt(confirmMsg, true);
 
     if (password !== confirmPassword) {
-      error($t("prompt.passwordMismatch"));
+      error($tr("prompt.passwordMismatch"));
       continue;
     }
 
@@ -431,14 +431,14 @@ export async function inputEmail(
   message?: string,
   required = true,
 ): Promise<string> {
-  const msg = message ?? $t("prompt.emailPrompt");
+  const msg = message ?? $tr("prompt.emailPrompt");
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   return await input(
     msg,
     (value) => {
       if (!emailRegex.test(value)) {
-        return $t("prompt.emailInvalid");
+        return $tr("prompt.emailInvalid");
       }
       return null;
     },
@@ -460,20 +460,24 @@ export async function inputUsername(
   maxLength = 50,
   required = true,
 ): Promise<string> {
-  const msg = message ?? $t("prompt.usernamePrompt");
+  const msg = message ?? $tr("prompt.usernamePrompt");
   const usernameRegex = /^[a-zA-Z0-9_]+$/;
 
   return await input(
     msg,
     (value) => {
       if (value.length < minLength) {
-        return $t("prompt.usernameMinLength", { minLength: String(minLength) });
+        return $tr("prompt.usernameMinLength", {
+          minLength: String(minLength),
+        });
       }
       if (value.length > maxLength) {
-        return $t("prompt.usernameMaxLength", { maxLength: String(maxLength) });
+        return $tr("prompt.usernameMaxLength", {
+          maxLength: String(maxLength),
+        });
       }
       if (!usernameRegex.test(value)) {
-        return $t("prompt.usernameInvalid");
+        return $tr("prompt.usernameInvalid");
       }
       return null;
     },
@@ -500,7 +504,7 @@ export async function inputNumber(
 
     if (!value || value.trim() === "") {
       if (required) {
-        error($t("prompt.numberRequired"));
+        error($tr("prompt.numberRequired"));
         continue;
       }
       return NaN;
@@ -509,17 +513,17 @@ export async function inputNumber(
     const num = Number(value.trim());
 
     if (isNaN(num)) {
-      error($t("prompt.numberInvalid"));
+      error($tr("prompt.numberInvalid"));
       continue;
     }
 
     if (min !== undefined && num < min) {
-      error($t("prompt.numberMin", { min: String(min) }));
+      error($tr("prompt.numberMin", { min: String(min) }));
       continue;
     }
 
     if (max !== undefined && num > max) {
-      error($t("prompt.numberMax", { max: String(max) }));
+      error($tr("prompt.numberMax", { max: String(max) }));
       continue;
     }
 
@@ -553,25 +557,25 @@ export async function select(
   while (true) {
     const max = options.length;
     const promptText = defaultValue !== undefined
-      ? $t("prompt.selectPromptDefault", {
+      ? $tr("prompt.selectPromptDefault", {
         max: String(max),
         default: String(defaultValue + 1),
       })
-      : $t("prompt.selectPromptRange", { max: String(max) });
+      : $tr("prompt.selectPromptRange", { max: String(max) });
     const input = await prompt(`\n${promptText}`);
 
     if (!input || input.trim() === "") {
       if (defaultValue !== undefined) {
         return defaultValue;
       }
-      error($t("prompt.selectChooseOne"));
+      error($tr("prompt.selectChooseOne"));
       continue;
     }
 
     const num = Number(input.trim());
 
     if (isNaN(num) || num < 1 || num > options.length) {
-      error($t("prompt.selectRange", { max: String(options.length) }));
+      error($tr("prompt.selectRange", { max: String(options.length) }));
       continue;
     }
 
@@ -599,20 +603,20 @@ export async function multiSelect(
     console.log(`  ${colors.dim}[${index + 1}]${colors.reset} ${option}`);
   });
 
-  const maxText = max ? $t("prompt.multiSelectMax", { max: String(max) }) : "";
+  const maxText = max ? $tr("prompt.multiSelectMax", { max: String(max) }) : "";
   const minText = min > 0
-    ? $t("prompt.multiSelectMin", { min: String(min) })
+    ? $tr("prompt.multiSelectMin", { min: String(min) })
     : "";
 
   while (true) {
-    const promptText = $t("prompt.multiSelectPrompt", { minText, maxText });
+    const promptText = $tr("prompt.multiSelectPrompt", { minText, maxText });
     const input = await prompt(`\n${promptText}`);
 
     if (!input || input.trim() === "") {
       if (min === 0) {
         return [];
       }
-      error($t("prompt.multiSelectAtLeastOne"));
+      error($tr("prompt.multiSelectAtLeastOne"));
       continue;
     }
 
@@ -622,7 +626,7 @@ export async function multiSelect(
     );
 
     if (indices.length === 0) {
-      error($t("prompt.multiSelectValid"));
+      error($tr("prompt.multiSelectValid"));
       continue;
     }
 
@@ -630,12 +634,12 @@ export async function multiSelect(
     const uniqueIndices = [...new Set(indices)].map((n) => n - 1);
 
     if (uniqueIndices.length < min) {
-      error($t("prompt.multiSelectMinCount", { min: String(min) }));
+      error($tr("prompt.multiSelectMinCount", { min: String(min) }));
       continue;
     }
 
     if (max !== undefined && uniqueIndices.length > max) {
-      error($t("prompt.multiSelectMaxCount", { max: String(max) }));
+      error($tr("prompt.multiSelectMaxCount", { max: String(max) }));
       continue;
     }
 
@@ -648,7 +652,7 @@ export async function multiSelect(
  * @param message 提示信息
  */
 export async function pause(message?: string): Promise<void> {
-  const msg = message ?? $t("prompt.pauseDefault");
+  const msg = message ?? $tr("prompt.pauseDefault");
   await prompt(msg);
 }
 
@@ -690,7 +694,7 @@ export async function interactiveMenu(
     });
 
     console.log(
-      `\n${colors.dim}${$t("prompt.menuHint")}${colors.reset}`,
+      `\n${colors.dim}${$tr("prompt.menuHint")}${colors.reset}`,
     );
   };
 
@@ -785,7 +789,7 @@ export async function interactiveMenu(
   } catch (_err) {
     // 如果原始模式不支持，回退到普通选择
     console.log(
-      `\n${colors.yellow}${$t("prompt.menuFallback")}${colors.reset}\n`,
+      `\n${colors.yellow}${$tr("prompt.menuFallback")}${colors.reset}\n`,
     );
     return await select(message, options, defaultValue);
   }
@@ -833,12 +837,12 @@ export async function interactiveMultiMenu(
       console.log(line);
     });
     const minText = min > 0
-      ? $t("prompt.multiMenuMin", { min: String(min) })
+      ? $tr("prompt.multiMenuMin", { min: String(min) })
       : "";
     const maxText = max != null
-      ? $t("prompt.multiMenuMax", { max: String(max) })
+      ? $tr("prompt.multiMenuMax", { max: String(max) })
       : "";
-    const hint = $t("prompt.multiMenuHint");
+    const hint = $tr("prompt.multiMenuHint");
     console.log(
       `\n${colors.dim}${hint}${minText}${maxText}${colors.reset}`,
     );
@@ -964,10 +968,10 @@ export async function interactiveMenuSearch(
     writeStdoutSync(encoder.encode("\r\x1b[K"));
     console.log(`${colors.cyan}${colors.bright}${message}${colors.reset}\n`);
     if (search) {
-      const filterLabel = $t("prompt.searchFilter");
+      const filterLabel = $tr("prompt.searchFilter");
       console.log(`${colors.dim}${filterLabel}${search}${colors.reset}\n`);
     }
-    const noMatchText = $t("prompt.searchNoMatch");
+    const noMatchText = $tr("prompt.searchNoMatch");
     const toShow = filteredIndices.length === 0
       ? [{ index: -1, text: noMatchText }]
       : filteredIndices.map((i) => ({ index: i, text: options[i] }));
@@ -978,7 +982,7 @@ export async function interactiveMenuSearch(
         : `    ${colors.dim}${text}${colors.reset}`;
       console.log(line);
     });
-    const searchHint = $t("prompt.searchHint");
+    const searchHint = $tr("prompt.searchHint");
     console.log(
       `\n${colors.dim}${searchHint}${colors.reset}`,
     );
