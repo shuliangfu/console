@@ -5,6 +5,7 @@
 import {
   createCommand,
   execPath,
+  fromFileUrl,
   getEnvAll,
   IS_BUN,
   IS_DENO,
@@ -477,10 +478,9 @@ describe("Console", () => {
   });
 
   describe("prompt 子进程测试", () => {
-    // Deno 用 file URL 兼容 Windows 路径；Bun 用 pathname
-    const scriptArg = IS_DENO
-      ? new URL("./prompt-script.ts", import.meta.url).href
-      : new URL("./prompt-script.ts", import.meta.url).pathname;
+    // Deno 用 file URL；Bun（含 Windows）用 fromFileUrl 得到本地路径，避免 pathname 在 Windows 上为 /D:/... 导致 spawn 失败
+    const scriptUrl = new URL("./prompt-script.ts", import.meta.url);
+    const scriptArg = IS_DENO ? scriptUrl.href : fromFileUrl(scriptUrl);
 
     async function runPromptScript(
       caseName: string,
@@ -668,9 +668,8 @@ describe("Console", () => {
       platform() !== "windows",
       "Windows: shouldUseColor 应跳过 Linux Docker 检测",
       async () => {
-        const scriptArg = IS_DENO
-          ? new URL("./ansi-script.ts", import.meta.url).href
-          : new URL("./ansi-script.ts", import.meta.url).pathname;
+        const ansiUrl = new URL("./ansi-script.ts", import.meta.url);
+        const scriptArg = IS_DENO ? ansiUrl.href : fromFileUrl(ansiUrl);
         const runArgs = IS_DENO
           ? ["run", "-A", "--no-prompt", scriptArg]
           : ["run", scriptArg];
@@ -1005,9 +1004,8 @@ describe("Console", () => {
 
     it("帮助输出应包含子命令别名（如 generate (g)）", async () => {
       // 通过子进程运行帮助脚本，避免 showHelp 中的 exit(0) 终止测试
-      const scriptArg = IS_DENO
-        ? new URL("./help-output-script.ts", import.meta.url).href
-        : new URL("./help-output-script.ts", import.meta.url).pathname;
+      const helpUrl = new URL("./help-output-script.ts", import.meta.url);
+      const scriptArg = IS_DENO ? helpUrl.href : fromFileUrl(helpUrl);
       const runArgs = IS_DENO
         ? ["run", "-A", "--no-prompt", scriptArg]
         : ["run", scriptArg];
@@ -1173,10 +1171,10 @@ describe("Console", () => {
   });
 
   describe("ANSI 环境变量", () => {
-    const getAnsiScriptArg = () =>
-      IS_DENO
-        ? new URL("./ansi-script.ts", import.meta.url).href
-        : new URL("./ansi-script.ts", import.meta.url).pathname;
+    const getAnsiScriptArg = () => {
+      const url = new URL("./ansi-script.ts", import.meta.url);
+      return IS_DENO ? url.href : fromFileUrl(url);
+    };
 
     it("NO_COLOR 时应禁用颜色", async () => {
       const scriptArg = getAnsiScriptArg();
