@@ -71,3 +71,51 @@ jobs:
 
       - name: Test (Deno, Windows)
         run: deno test -A --no-check tests/
+
+  # --- Bun: Linux ---
+  test-linux-bun:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies (Bun)
+        run: bun install
+
+      - name: Test (Bun)
+        run: bun test tests/
+
+  # --- Bun: macOS ---
+  test-macos-bun:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies (Bun)
+        run: bun install
+
+      - name: Test (Bun, macOS)
+        run: bun test tests/
+
+  # --- Bun: Windows ---
+  test-windows-bun:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies (Bun)
+        run: bun install
+
+      - name: Test (Bun, Windows)
+        run: bun test tests/
