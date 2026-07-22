@@ -7,8 +7,8 @@ import {
   execPath,
   fromFileUrl,
   getEnvAll,
-  IS_BUN,
   IS_DENO,
+  IS_NODE,
   platform,
 } from "@dreamer/runtime-adapter";
 import { beforeAll, describe, expect, it } from "@dreamer/test";
@@ -25,6 +25,7 @@ import {
 } from "../src/ansi.ts";
 import { Command } from "../src/command.ts";
 import { CommandHelpGenerator, type HelpConfig } from "../src/help.ts";
+import { setConsoleLocale } from "../src/i18n.ts";
 import {
   error,
   info,
@@ -73,7 +74,54 @@ import type {
   CommandOption,
   ParsedOptions,
 } from "../src/types.ts";
-import { setConsoleLocale } from "../src/i18n.ts";
+
+/**
+ * 构建跨运行时运行 TS 脚本的子进程参数。
+ * - Deno: `deno run -A --no-prompt <script> [extra...]`
+ * - Node: `node --import tsx <script> [extra...]`（tsx 提供 TS 转译）
+ * - Bun:  `bun run <script> [extra...]`
+ *
+ * 【Why】子进程通过 execPath() 拿到运行时二进制，但各运行时启动 TS 脚本的参数不同，
+ *   统一在此处分发，避免 6 处测试各自重复 IS_DENO/IS_NODE 三元判断。
+ */
+function buildScriptArgs(scriptPath: string, ...extra: string[]): string[] {
+  if (IS_DENO) return ["run", "-A", "--no-prompt", scriptPath, ...extra];
+  if (IS_NODE) return ["--import", "tsx", scriptPath, ...extra];
+  return ["run", scriptPath, ...extra];
+}
+
+/**
+ * 将 Web ReadableStream 全量读为 Uint8Array（跨 Deno/Bun/Node）。
+ *
+ * 【Why】Node 下 `new Response(stream).arrayBuffer()` 在子进程「写完即退出」时会报
+ *   "Response body object should not be disturbed or locked"（undici 限制，见
+ *   runtime-adapter process.ts 的 collectNodeReadable 注释）。改用 getReader 循环
+ *   读取，三端行为一致且无 Response 构造限制。
+ */
+async function readAllBytes(
+  stream: ReadableStream<Uint8Array> | null,
+): Promise<Uint8Array> {
+  if (!stream) return new Uint8Array(0);
+  const reader = stream.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (value) {
+      chunks.push(value);
+      total += value.length;
+    }
+  }
+  if (total === 0) return new Uint8Array(0);
+  const out = new Uint8Array(total);
+  let offset = 0;
+  for (const c of chunks) {
+    out.set(c, offset);
+    offset += c.length;
+  }
+  return out;
+}
 
 describe("Console", () => {
   beforeAll(() => {
@@ -486,9 +534,7 @@ describe("Console", () => {
       caseName: string,
       stdin: string,
     ): Promise<{ stdout: string; stderr: string; success: boolean }> {
-      const runArgs = IS_DENO
-        ? ["run", "-A", "--no-prompt", scriptArg, caseName]
-        : ["run", scriptArg, caseName];
+      const runArgs = buildScriptArgs(scriptArg, caseName);
       const baseEnv = { ...getEnvAll(), NO_COLOR: "1" };
       const cmd = createCommand(execPath(), {
         args: runArgs,
@@ -503,13 +549,13 @@ describe("Console", () => {
         await writer.write(new TextEncoder().encode(stdin));
         await writer.close();
       }
-      const stdoutBytes = proc.stdout
-        ? new Uint8Array(await new Response(proc.stdout).arrayBuffer())
-        : new Uint8Array(0);
-      const stderrBytes = proc.stderr
-        ? new Uint8Array(await new Response(proc.stderr).arrayBuffer())
-        : new Uint8Array(0);
-      const status = await proc.status;
+      // 【Why 并行】stdout/stderr/status 并发收集，避免大输出下管道缓冲背压死锁
+      // （与 runtime-adapter output() 的 Promise.all 策略一致）。
+      const [stdoutBytes, stderrBytes, status] = await Promise.all([
+        readAllBytes(proc.stdout),
+        readAllBytes(proc.stderr),
+        proc.status,
+      ]);
       return {
         stdout: new TextDecoder().decode(stdoutBytes),
         stderr: new TextDecoder().decode(stderrBytes),
@@ -670,9 +716,7 @@ describe("Console", () => {
       async () => {
         const ansiUrl = new URL("./ansi-script.ts", import.meta.url);
         const scriptArg = IS_DENO ? ansiUrl.href : fromFileUrl(ansiUrl);
-        const runArgs = IS_DENO
-          ? ["run", "-A", "--no-prompt", scriptArg]
-          : ["run", scriptArg];
+        const runArgs = buildScriptArgs(scriptArg);
         const cmd = createCommand(execPath(), {
           args: runArgs,
           stdout: "piped",
@@ -1006,9 +1050,7 @@ describe("Console", () => {
       // 通过子进程运行帮助脚本，避免 showHelp 中的 exit(0) 终止测试
       const helpUrl = new URL("./help-output-script.ts", import.meta.url);
       const scriptArg = IS_DENO ? helpUrl.href : fromFileUrl(helpUrl);
-      const runArgs = IS_DENO
-        ? ["run", "-A", "--no-prompt", scriptArg]
-        : ["run", scriptArg];
+      const runArgs = buildScriptArgs(scriptArg);
       const helpEnv = { ...getEnvAll(), NO_COLOR: "1" };
       const cmd = createCommand(execPath(), {
         args: runArgs,
@@ -1178,9 +1220,7 @@ describe("Console", () => {
 
     it("NO_COLOR 时应禁用颜色", async () => {
       const scriptArg = getAnsiScriptArg();
-      const runArgs = IS_DENO
-        ? ["run", "-A", "--no-prompt", scriptArg]
-        : ["run", scriptArg];
+      const runArgs = buildScriptArgs(scriptArg);
       const cmd = createCommand(execPath(), {
         args: runArgs,
         stdout: "piped",
@@ -1194,9 +1234,7 @@ describe("Console", () => {
 
     it("DWEB_NO_COLOR 时应禁用颜色", async () => {
       const scriptArg = getAnsiScriptArg();
-      const runArgs = IS_DENO
-        ? ["run", "-A", "--no-prompt", scriptArg]
-        : ["run", scriptArg];
+      const runArgs = buildScriptArgs(scriptArg);
       const cmd = createCommand(execPath(), {
         args: runArgs,
         stdout: "piped",
@@ -1210,9 +1248,7 @@ describe("Console", () => {
 
     it("TERM=dumb 时应禁用颜色", async () => {
       const scriptArg = getAnsiScriptArg();
-      const runArgs = IS_DENO
-        ? ["run", "-A", "--no-prompt", scriptArg]
-        : ["run", scriptArg];
+      const runArgs = buildScriptArgs(scriptArg);
       const cmd = createCommand(execPath(), {
         args: runArgs,
         stdout: "piped",

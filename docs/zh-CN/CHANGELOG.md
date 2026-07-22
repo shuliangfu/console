@@ -9,6 +9,45 @@
 
 ---
 
+## [1.1.0] - 2026-07-23
+
+### 新增
+
+- **Node.js 兼容**：console 现可在 Node.js 22+ 上运行，与 Deno、Bun 三端共用。
+  所有文件系统、环境与进程操作均经 `@dreamer/runtime-adapter`（v1.2.2，已支持
+  Node）。
+  - `src/help.ts`：新增 `IS_NODE` 分支处理运行时命令提示（`npx tsx`）与主模块
+    检测（Bun/Node 共用 `process.argv[1]`；Deno 用 `Deno.mainModule`）。
+  - `tests/mod.test.ts`：新增 `buildScriptArgs()` 辅助函数按运行时分发子进程启动
+    参数——Node 用 `["--import", "tsx", script]`、Deno 用
+    `["run", "-A", "--no-prompt", script]`、Bun 用 `["run", script]`。新增
+    `readAllBytes()` 辅助函数，改用 Web Streams `getReader()` 循环读取替代
+    `new Response(stream).arrayBuffer()`——后者在 Node 下当子进程「写完即退出」时
+    报 "Response body object should not be disturbed or locked"（undici 限制，见
+    runtime-adapter `collectNodeReadable`）。
+- **Node 测试基础设施**：`package.json` 含 `test:node` 脚本
+  （`tsx --tsconfig tsconfig.json --test --test-force-exit tests/*.test.ts`）、
+  `tsconfig.json`。`runtime-adapter` 从 devDependencies 移至 dependencies
+  （`src/` 中使用）。console 无浏览器测试，无需安装 Chromium 或排除浏览器测试。
+- **CI 工作流**升级为 9 个 job — 3 Deno v2.9 + 3 Bun + 3 Node 22。无需
+  Playwright/Chromium（console 是纯 CLI 库）。Windows Bun 运行全部测试（无浏览器
+  测试需排除）。
+- `deno.json` 添加 `minimumDependencyAge: 0`，以兼容当日发布的 `@dreamer/*`
+  依赖。
+
+### 变更
+
+- 依赖升级：`@dreamer/i18n` ^1.1.2、`@dreamer/test` ^1.2.3、
+  `@dreamer/runtime-adapter` ^1.2.2。
+- `runtime-adapter` 提升为运行时依赖（原先仅 dev 依赖）。
+
+### 文档
+
+- 中英文测试报告更新为三端结果：Deno 141、Bun 140、Node 140（三端各 1 个跳过——
+  Windows 平台专属测试）。
+
+---
+
 ## [1.0.12] - 2026-02-19
 
 ### 变更

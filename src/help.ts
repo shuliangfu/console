@@ -4,11 +4,11 @@
  * @fileoverview 命令行帮助信息生成器
  */
 
-import { cwd, IS_BUN, IS_DENO } from "@dreamer/runtime-adapter";
+import { cwd, IS_BUN, IS_DENO, IS_NODE } from "@dreamer/runtime-adapter";
 import { colors } from "./ansi.ts";
+import { $tr } from "./i18n.ts";
 import { exit } from "./runtime-utils.ts";
 import type { CommandArgument, CommandOption } from "./types.ts";
-import { $tr } from "./i18n.ts";
 
 /** showHelp 的配置类型 */
 export interface HelpConfig {
@@ -393,16 +393,20 @@ export class CommandHelpGenerator {
       if (firstSubcommand) {
         // 尝试获取当前脚本路径
         // 根据运行时环境选择命令前缀
-        const runtimeCommand = IS_BUN ? "bun run" : "deno run -A";
+        const runtimeCommand = IS_BUN
+          ? "bun run"
+          : IS_NODE
+          ? "npx tsx"
+          : "deno run -A";
         let scriptPath = `${runtimeCommand} <script>`;
         try {
           let mainModule: string | undefined;
 
-          // 获取主模块路径（兼容 Deno 和 Bun）
+          // 获取主模块路径（兼容 Deno、Bun、Node）
           if (IS_DENO) {
             mainModule = (globalThis as any).Deno.mainModule;
-          } else if (IS_BUN) {
-            // Bun 中通过 process.argv[1] 获取主模块路径
+          } else if (IS_BUN || IS_NODE) {
+            // Bun / Node 中通过 process.argv[1] 获取主模块路径
             const process = (globalThis as any).process;
             if (process && process.argv && process.argv.length > 1) {
               const mainFile = process.argv[1];

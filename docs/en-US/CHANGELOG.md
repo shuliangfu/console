@@ -10,6 +10,48 @@ and this project adheres to
 
 ---
 
+## [1.1.0] - 2026-07-23
+
+### Added
+
+- **Node.js compatibility**: Console now runs on Node.js 22+ alongside Deno and
+  Bun. All filesystem, environment, and process operations go through
+  `@dreamer/runtime-adapter` (v1.2.2, Node-supported).
+  - `src/help.ts`: Added `IS_NODE` branch for the runtime command hint
+    (`npx tsx`) and main-module detection via `process.argv[1]` (Bun/Node share
+    this path; Deno uses `Deno.mainModule`).
+  - `tests/mod.test.ts`: Added `buildScriptArgs()` helper to dispatch subprocess
+    launch args per runtime — Node uses `["--import", "tsx", script]`, Deno uses
+    `["run", "-A", "--no-prompt", script]`, Bun uses `["run", script]`. Added
+    `readAllBytes()` helper using the Web Streams `getReader()` loop instead of
+    `new Response(stream).arrayBuffer()`, which fails on Node with
+    "Response body object should not be disturbed or locked" when a subprocess
+    writes and exits quickly (undici limitation; see runtime-adapter
+    `collectNodeReadable`).
+- **Node test infrastructure**: `package.json` with `test:node` script
+  (`tsx --tsconfig tsconfig.json --test --test-force-exit tests/*.test.ts`),
+  `tsconfig.json`. `runtime-adapter` moved from devDependencies to dependencies
+  (used in `src/`). Console has no browser tests, so no Chromium install or
+  browser-test exclusion is needed.
+- **CI workflow** updated to 9 jobs — 3 Deno v2.9 + 3 Bun + 3 Node 22. No
+  Playwright/Chromium needed (console is a pure CLI library). Windows Bun runs
+  the full suite (no browser tests to exclude).
+- `minimumDependencyAge: 0` in `deno.json` for freshly published `@dreamer/*`
+  dependencies.
+
+### Changed
+
+- Dependencies upgraded: `@dreamer/i18n` ^1.1.2, `@dreamer/test` ^1.2.3,
+  `@dreamer/runtime-adapter` ^1.2.2.
+- `runtime-adapter` promoted to a runtime dependency (was dev-only).
+
+### Documentation
+
+- Test report (en-US and zh-CN) updated to three-end results: Deno 141, Bun 140,
+  Node 140 (1 skipped on each — Windows-platform-specific test).
+
+---
+
 ## [1.0.12] - 2026-02-19
 
 ### Changed

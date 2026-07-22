@@ -2,24 +2,37 @@
 
 ## 测试概览
 
-- **测试库版本**：@dreamer/test@^1.0.0
-- **测试框架**：@dreamer/test（兼容 Deno 与 Bun）
-- **测试日期**：2026-02-19
+- **console 版本**：@dreamer/console@1.1.0
+- **测试库版本**：@dreamer/test@^1.2.3
+- **测试框架**：@dreamer/test（兼容 Deno、Bun 与 Node.js）
+- **测试日期**：2026-07-23
 - **测试环境**：
-  - Bun 1.3.5
-  - Deno 2.6+
-- **运行时适配器**：@dreamer/runtime-adapter@^1.0.2
+  - Deno 2.9+
+  - Bun 1.3+
+  - Node.js 22+（通过 `tsx --test`）
+- **运行时适配器**：@dreamer/runtime-adapter@^1.2.2
 
 ## 测试结果
 
 ### 总体统计
 
-- **测试总数**：141
-- **通过**：141 ✅
-- **忽略**：1（仅 Windows 平台）
+- **测试总数**：141（Deno）/ 140（Bun）/ 140（Node）
+- **通过**：141 / 140 / 140 ✅
+- **忽略/跳过**：1（Windows 平台专属测试，三端各跳过 1 个）
 - **失败**：0
 - **通过率**：100% ✅
-- **执行时间**：约 1–2 秒（Deno/Bun）
+- **执行时间**：约 1–2 秒（Deno/Bun）/ 约 1.7 秒（Node）
+
+### 三端测试摘要
+
+三端全部通过。console 是纯 CLI 库，无浏览器测试，三端运行相同的 `mod.test.ts`
+套件（141 条；1 条 Windows 专属测试在非 Windows 平台跳过）。
+
+- **Deno（141 条）**：140 通过，1 忽略。
+- **Bun（140 条）**：140 通过，1 跳过。
+- **Node.js 22（140 条）**：140 通过，1 跳过。子进程测试通过
+  `node --import tsx <script>` 运行；流读取用 Web Streams `getReader()` 循环
+  （见 `tests/mod.test.ts` 中的 `readAllBytes`）。
 
 ### 测试文件统计
 
@@ -192,16 +205,27 @@
 
 ### Deno
 
-- ✅ 所有 API 在 Deno 2.6+ 下正常工作
+- ✅ 所有 API 在 Deno 2.9+ 下正常工作
 - ✅ 使用 @dreamer/runtime-adapter
 - ✅ 测试需 `-A` 或 `--allow-env`
 
 ### Bun
 
-- ✅ 所有 API 在 Bun 1.3.5 下正常工作
+- ✅ 所有 API 在 Bun 1.3+ 下正常工作
 - ✅ 使用 @dreamer/runtime-adapter
 - ✅ 全部测试通过（140 通过，1 跳过）
 - ✅ Prompt 子进程测试通过（createCommand stdin getWriter）
+
+### Node.js
+
+- ✅ 所有 API 在 Node.js 22+ 下正常工作（通过 `tsx --test`）
+- ✅ 使用 @dreamer/runtime-adapter（v1.2.2，已支持 Node）
+- ✅ 全部测试通过（140 通过，1 跳过）
+- ✅ Prompt 子进程测试通过：`buildScriptArgs` 为 Node 分发
+  `["--import", "tsx", script]`；`readAllBytes` 用 `getReader()` 循环读取流
+  （避免 undici `Response` "disturbed or locked" 错误）
+- ✅ `src/help.ts` 的 `IS_NODE` 分支渲染 `npx tsx` 提示，并通过
+  `process.argv[1]` 检测主模块
 
 ## 测试质量评估
 

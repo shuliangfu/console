@@ -2,24 +2,38 @@
 
 ## Test Overview
 
-- **Test library version**: @dreamer/test@^1.0.0
-- **Test framework**: @dreamer/test (compatible with Deno and Bun)
-- **Test date**: 2026-02-19
+- **Console version**: @dreamer/console@1.1.0
+- **Test library version**: @dreamer/test@^1.2.3
+- **Test framework**: @dreamer/test (compatible with Deno, Bun, and Node.js)
+- **Test date**: 2026-07-23
 - **Test environment**:
-  - Bun 1.3.5
-  - Deno 2.6+
-- **Runtime adapter**: @dreamer/runtime-adapter@^1.0.2
+  - Deno 2.9+
+  - Bun 1.3+
+  - Node.js 22+ (via `tsx --test`)
+- **Runtime adapter**: @dreamer/runtime-adapter@^1.2.2
 
 ## Test Results
 
 ### Overall Statistics
 
-- **Total tests**: 141
-- **Passed**: 141 ✅
-- **Ignored**: 1 (Windows platform specific)
+- **Total tests**: 141 (Deno) / 140 (Bun) / 140 (Node)
+- **Passed**: 141 / 140 / 140 ✅
+- **Ignored/Skipped**: 1 (Windows-platform-specific test, skipped on each runtime)
 - **Failed**: 0
 - **Pass rate**: 100% ✅
-- **Execution time**: ~1–2 s (Deno/Bun)
+- **Execution time**: ~1–2 s (Deno/Bun) / ~1.7 s (Node)
+
+### Three-end test summary
+
+All tests pass across three runtimes. Console is a pure CLI library with no
+browser tests, so all three runtimes run the identical `mod.test.ts` suite
+(141 tests; 1 Windows-only test is skipped on non-Windows).
+
+- **Deno (141 tests)**: 140 passed, 1 ignored.
+- **Bun (140 tests)**: 140 passed, 1 skipped.
+- **Node.js 22 (140 tests)**: 140 passed, 1 skipped. Subprocess tests run via
+  `node --import tsx <script>`; stream reading uses the Web Streams
+  `getReader()` loop (see `readAllBytes` in `tests/mod.test.ts`).
 
 ### Test File Statistics
 
@@ -196,16 +210,27 @@
 
 ### Deno
 
-- ✅ All APIs work under Deno 2.6+
+- ✅ All APIs work under Deno 2.9+
 - ✅ Uses @dreamer/runtime-adapter
 - ✅ Requires `-A` or `--allow-env` for tests
 
 ### Bun
 
-- ✅ All APIs work under Bun 1.3.5
+- ✅ All APIs work under Bun 1.3+
 - ✅ Uses @dreamer/runtime-adapter
 - ✅ All tests pass (140 passed, 1 skipped)
 - ✅ Prompt subprocess tests pass (createCommand stdin getWriter)
+
+### Node.js
+
+- ✅ All APIs work under Node.js 22+ (via `tsx --test`)
+- ✅ Uses @dreamer/runtime-adapter (v1.2.2, Node-supported)
+- ✅ All tests pass (140 passed, 1 skipped)
+- ✅ Prompt subprocess tests pass: `buildScriptArgs` dispatches
+  `["--import", "tsx", script]` for Node; `readAllBytes` reads streams via
+  `getReader()` loop (avoids undici `Response` "disturbed or locked" error)
+- ✅ `src/help.ts` `IS_NODE` branch renders `npx tsx` hint and detects
+  mainModule via `process.argv[1]`
 
 ## Test Quality Assessment
 
