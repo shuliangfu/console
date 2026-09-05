@@ -959,6 +959,28 @@ describe("Console", () => {
         expect(Array.isArray(result.options.tags)).toBe(true);
         expect(result.options.tags).toEqual(["a", "b", "c"]);
       });
+
+      it("裸 -- 之后应全部视为位置参数（透传）", () => {
+        const options = [
+          {
+            name: "app",
+            alias: "a",
+            description: "应用",
+            type: "string" as const,
+            requiresValue: true,
+          },
+        ];
+        const result = CommandParser.parseArgs(
+          ["hello/world", "--", "--force", "x"],
+          options,
+          [],
+        );
+        expect(result.arguments).toEqual([
+          "hello/world",
+          "--force",
+          "x",
+        ]);
+      });
     });
   });
 

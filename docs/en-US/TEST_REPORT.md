@@ -2,10 +2,10 @@
 
 ## Test Overview
 
-- **Console version**: @dreamer/console@1.1.0
+- **Console version**: @dreamer/console@1.1.1
 - **Test library version**: @dreamer/test@^1.2.3
 - **Test framework**: @dreamer/test (compatible with Deno, Bun, and Node.js)
-- **Test date**: 2026-07-23
+- **Test date**: 2026-09-05
 - **Test environment**:
   - Deno 2.9+
   - Bun 1.3+
@@ -16,9 +16,10 @@
 
 ### Overall Statistics
 
-- **Total tests**: 141 (Deno) / 140 (Bun) / 140 (Node)
-- **Passed**: 141 / 140 / 140 ✅
-- **Ignored/Skipped**: 1 (Windows-platform-specific test, skipped on each runtime)
+- **Total tests**: 142 (Deno) / 141 (Bun) / 141 (Node)
+- **Passed**: 141 / 141 / 141 ✅
+- **Ignored/Skipped**: 1 (Windows-platform-specific test, skipped on each
+  runtime)
 - **Failed**: 0
 - **Pass rate**: 100% ✅
 - **Execution time**: ~1–2 s (Deno/Bun) / ~1.7 s (Node)
@@ -26,12 +27,12 @@
 ### Three-end test summary
 
 All tests pass across three runtimes. Console is a pure CLI library with no
-browser tests, so all three runtimes run the identical `mod.test.ts` suite
-(141 tests; 1 Windows-only test is skipped on non-Windows).
+browser tests, so all three runtimes run the identical `mod.test.ts` suite (142
+tests; 1 Windows-only test is skipped on non-Windows).
 
-- **Deno (141 tests)**: 140 passed, 1 ignored.
-- **Bun (140 tests)**: 140 passed, 1 skipped.
-- **Node.js 22 (140 tests)**: 140 passed, 1 skipped. Subprocess tests run via
+- **Deno (142 tests)**: 141 passed, 1 ignored.
+- **Bun (141 tests)**: 141 passed, 1 skipped.
+- **Node.js 22 (141 tests)**: 141 passed, 1 skipped. Subprocess tests run via
   `node --import tsx <script>`; stream reading uses the Web Streams
   `getReader()` loop (see `readAllBytes` in `tests/mod.test.ts`).
 
@@ -39,7 +40,7 @@ browser tests, so all three runtimes run the identical `mod.test.ts` suite
 
 | Test File     | Tests | Status                   | Description                                                                                                       |
 | ------------- | ----- | ------------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| `mod.test.ts` | 141   | ✅ 141 passed, 1 ignored | All feature modules, prompt subprocess tests, ANSI env vars, parseArrowKey, edge cases, mod exports, type exports |
+| `mod.test.ts` | 142   | ✅ 141 passed, 1 ignored | All feature modules, prompt subprocess tests, ANSI env vars, parseArrowKey, edge cases, mod exports, type exports |
 
 ## Feature Test Details
 
@@ -85,8 +86,9 @@ browser tests, so all three runtimes run the identical `mod.test.ts` suite
 - ✅ `validateOptionValue`, `validateArgumentValue`
 - ✅ `parseArgs` - simple options, with value, with equals, short options,
   arguments, defaults
+- ✅ `parseArgs` - bare `--` argument passthrough for option forwarding
 
-**Test result**: 17 tests all passed
+**Test result**: 18 tests all passed
 
 ### 5. CommandHelpGenerator Class (help.ts)
 

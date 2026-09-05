@@ -10,6 +10,19 @@ and this project adheres to
 
 ---
 
+## [1.1.1] - 2026-09-05
+
+### Added
+
+- **Bare `--` argument passthrough in CommandParser**: In
+  `CommandParser.parseArgs()`, arguments following a bare `--` delimiter are now
+  treated as positional arguments and appended directly to `parsedArgs`,
+  enabling option forwarding to subcommands or nested runners (e.g.
+  `dweb-cli run hello -- --force`).
+- Unit tests covering bare `--` argument passthrough in `tests/mod.test.ts`.
+
+---
+
 ## [1.1.0] - 2026-07-23
 
 ### Added
@@ -24,9 +37,9 @@ and this project adheres to
     launch args per runtime — Node uses `["--import", "tsx", script]`, Deno uses
     `["run", "-A", "--no-prompt", script]`, Bun uses `["run", script]`. Added
     `readAllBytes()` helper using the Web Streams `getReader()` loop instead of
-    `new Response(stream).arrayBuffer()`, which fails on Node with
-    "Response body object should not be disturbed or locked" when a subprocess
-    writes and exits quickly (undici limitation; see runtime-adapter
+    `new Response(stream).arrayBuffer()`, which fails on Node with "Response
+    body object should not be disturbed or locked" when a subprocess writes and
+    exits quickly (undici limitation; see runtime-adapter
     `collectNodeReadable`).
 - **Node test infrastructure**: `package.json` with `test:node` script
   (`tsx --tsconfig tsconfig.json --test --test-force-exit tests/*.test.ts`),

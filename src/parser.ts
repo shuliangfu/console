@@ -197,6 +197,12 @@ export class CommandParser {
     while (i < args.length) {
       const arg = args[i];
 
+      // 裸 `--`：后续全部视为位置参数（供子命令透传，如 dweb-cli run hello -- --force）
+      if (arg === "--") {
+        parsedArgs.push(...args.slice(i + 1));
+        break;
+      }
+
       // 处理选项（以 -- 或 - 开头）
       if (arg.startsWith("--")) {
         // 先检查是否包含等号，如果包含则先分离选项名和值

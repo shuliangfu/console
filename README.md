@@ -702,7 +702,7 @@ See [TEST_REPORT.md](./docs/en-US/TEST_REPORT.md) for details.
 
 Coverage:
 
-- ✅ 141 tests (140 passed, 1 skipped)
+- ✅ 142 tests (141 passed, 1 skipped)
 - ✅ Feature modules: ANSI colors, output, Command, parser, help, table,
   Spinner, prompt (incl. subprocess tests)
 - ✅ parseArrowKey (Windows compatible), ANSI env vars (NO_COLOR, DWEB_NO_COLOR,
@@ -714,9 +714,9 @@ Coverage:
 
 ## 📋 Changelog
 
-**v1.0.12** (2026-02-19) – Changed: i18n init runs automatically in module;
-entry no longer calls init. Use `setConsoleLocale()` in tests only when
-overriding locale. Full history: [CHANGELOG.md](./docs/en-US/CHANGELOG.md).
+**v1.1.1** (2026-09-05) – Added: Support bare `--` argument passthrough in
+`CommandParser.parseArgs()` for forwarding options to subcommands; added unit
+test. Full history: [CHANGELOG.md](./docs/en-US/CHANGELOG.md).
 
 ---
 

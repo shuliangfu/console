@@ -700,7 +700,7 @@ bun test tests/mod.test.ts
 
 测试覆盖包括：
 
-- ✅ 141 个测试用例（140 通过，1 跳过）
+- ✅ 142 个测试用例（141 通过，1 跳过）
 - ✅ 功能模块：ANSI
   颜色、输出、Command、解析器、帮助、表格、Spinner、prompt（含子进程测试）
 - ✅ parseArrowKey（Windows 兼容）、ANSI
@@ -712,8 +712,8 @@ bun test tests/mod.test.ts
 
 ## 📋 变更日志
 
-**v1.0.12** (2026-02-19) – 变更：i18n 在模块加载时自动初始化，入口不再调用
-init；测试仅在需覆盖语言时使用 `setConsoleLocale()`。完整历史详见
+**v1.1.1** (2026-09-05) – 新增：`CommandParser.parseArgs()` 支持裸 `--`
+参数透传，后续参数全部视为位置参数供子命令使用；新增单元测试。完整历史详见
 [CHANGELOG.md](./CHANGELOG.md)。
 
 ---
