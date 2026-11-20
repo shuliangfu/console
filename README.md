@@ -714,9 +714,9 @@ Coverage:
 
 ## 📋 Changelog
 
-**v1.1.1** (2026-09-05) – Added: Support bare `--` argument passthrough in
-`CommandParser.parseArgs()` for forwarding options to subcommands; added unit
-test. Full history: [CHANGELOG.md](./docs/en-US/CHANGELOG.md).
+**v1.1.2** (2026-11-20) – Fixed: table bottom borders now use bottom-style
+characters (`└` `┴` `┘`) instead of repeating the top border. Full history:
+[CHANGELOG.md](./docs/en-US/CHANGELOG.md).
 
 ---
 

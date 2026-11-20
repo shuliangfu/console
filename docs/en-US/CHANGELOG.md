@@ -10,6 +10,17 @@ and this project adheres to
 
 ---
 
+## [1.1.2] - 2026-11-20
+
+### Fixed
+
+- **Table bottom border:** `table()` previously drew the bottom border with the
+  same top-style characters (`┌` `┬` `┐`). `drawBorder` now accepts a `position`
+  argument and uses bottom-style characters (`└` `┴` `┘`) for the closing
+  border.
+
+---
+
 ## [1.1.1] - 2026-09-05
 
 ### Added

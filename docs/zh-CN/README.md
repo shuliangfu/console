@@ -712,9 +712,8 @@ bun test tests/mod.test.ts
 
 ## 📋 变更日志
 
-**v1.1.1** (2026-09-05) – 新增：`CommandParser.parseArgs()` 支持裸 `--`
-参数透传，后续参数全部视为位置参数供子命令使用；新增单元测试。完整历史详见
-[CHANGELOG.md](./CHANGELOG.md)。
+**v1.1.2** (2026-11-20) – 修复：表格底边现在使用底部边框字符（`└` `┴` `┘`），
+不再复用顶部边框。完整历史详见 [CHANGELOG.md](./CHANGELOG.md)。
 
 ---
 
