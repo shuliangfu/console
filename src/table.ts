@@ -106,11 +106,13 @@ function alignText(
  * 绘制表格边框
  * @param widths 列宽度数组
  * @param style 边框样式
+ * @param position 顶部或底部边框
  * @returns 边框字符串
  */
 function drawBorder(
   widths: number[],
   style: "single" | "double" | "rounded" = "single",
+  position: "top" | "bottom" = "top",
 ): string {
   const chars = {
     single: {
@@ -155,6 +157,10 @@ function drawBorder(
   };
 
   const c = chars[style];
+  if (position === "bottom") {
+    const line = widths.map((w) => c.bottom.repeat(w + 2)).join(c.bottomCross);
+    return c.bottomLeft + line + c.bottomRight;
+  }
   const line = widths.map((w) => c.top.repeat(w + 2)).join(c.topCross);
   return c.topLeft + line + c.topRight;
 }
@@ -285,7 +291,9 @@ export function table(
 
   if (border) {
     // 底部边框
-    console.log(colors.gray + drawBorder(widths, borderStyle) + colors.reset);
+    console.log(
+      colors.gray + drawBorder(widths, borderStyle, "bottom") + colors.reset,
+    );
   }
 }
 

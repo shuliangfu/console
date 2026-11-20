@@ -361,6 +361,35 @@ describe("Console", () => {
       ).not.toThrow();
     });
 
+    it("应该使用底部边框字符绘制表格底边", () => {
+      const data = [
+        { name: "Alice", age: 30 },
+        { name: "Bob", age: 25 },
+      ];
+      const lines: string[] = [];
+      const originalLog = console.log;
+      console.log = (...args: unknown[]) => {
+        lines.push(args.map((v) => String(v)).join(" "));
+      };
+      try {
+        table(data, undefined, { border: true, borderStyle: "single" });
+      } finally {
+        console.log = originalLog;
+      }
+
+      const plain = lines.map((line) => line.replace(/\x1b\[[0-9;]*m/g, ""));
+      expect(plain.length).toBeGreaterThan(1);
+      expect(plain[0].includes("┌")).toBe(true);
+      expect(plain[0].includes("┐")).toBe(true);
+      const bottom = plain[plain.length - 1];
+      expect(bottom.includes("└")).toBe(true);
+      expect(bottom.includes("┘")).toBe(true);
+      expect(bottom.includes("┴")).toBe(true);
+      expect(bottom.includes("┌")).toBe(false);
+      expect(bottom.includes("┐")).toBe(false);
+      expect(bottom.includes("┬")).toBe(false);
+    });
+
     it("应该输出键值对表格", () => {
       const data = {
         name: "test",
